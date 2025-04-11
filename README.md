@@ -51,7 +51,6 @@ ADABot is a Discord bot developed for the ADA AI Competition. The bot features c
 | `!movie`      | Suggests a random movie                                                     |
 | `!zodiac`     | Shows daily horoscope for a zodiac sign (e.g., `!zodiac Leo`)               |
 | `!define`     | Get definitions of a word (e.g., `!define tree`)                            |
-| `!info`       | Shows member list and count for your server                                 |
 
 ---
 
