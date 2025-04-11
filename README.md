@@ -1,7 +1,6 @@
 # ADABot
-# Discord AI Chatbot 🤖
 
-A multi-functional Discord bot powered by OpenRouter and several public APIs. It supports AI chat, dictionary lookups, jokes, horoscopes, weather reports, search functionality, and more — all with a customizable tone.
+A multi-functional Discord bot powered by OpenRouter and other public APIs. It supports AI chat, dictionary lookups, jokes, horoscopes, weather reports, web searches, and more — all in one sleek package.
 
 > ✅ The bot is already hosted and running. You just need to add it to your server!
 
@@ -9,7 +8,7 @@ A multi-functional Discord bot powered by OpenRouter and several public APIs. It
 
 ## 🚀 Add the Bot to Your Server
 
-Click below to invite the bot with admin permissions:
+Click below to invite the bot to your server with admin permissions:
 
 👉 [Add to Discord](https://discord.com/oauth2/authorize?client_id=1360228903729369278&permissions=8&integration_type=0&scope=bot)
 
@@ -34,32 +33,33 @@ Click below to invite the bot with admin permissions:
 
 ## 🧩 APIs Used
 
-- **OpenRouter API** – for AI chat and quote generation  
-- **wttr.in** – weather lookup via plain-text URL  
-- **Official Joke API** – jokes in JSON format  
-- **DuckDuckGo Instant Answer API** – search summaries  
-- **Horoscope App API** – zodiac horoscopes  
-- **Free Dictionary API** – word definitions  
+- **OpenRouter API** – AI chat and quote generation  
+- **wttr.in** – Weather lookup via plain-text URL  
+- **Official Joke API** – Random jokes  
+- **DuckDuckGo Instant Answer API** – Quick web search summaries  
+- **Horoscope App API** – Daily zodiac readings  
+- **Free Dictionary API** – English word definitions  
 
 ---
 
 ## 🗃️ Data Storage
 
-- The bot uses **SQLite** (`botdata.db`) to store:
-  - AI chat messages (user + timestamp)
-  - Server members (name + join date)
+This bot uses an SQLite database (`botdata.db`) to store:
+
+- AI chat messages with timestamps
+- Server member names and join dates
 
 ---
 
-## 🔧 Optional: Run Locally
+## 🔧 Run the Bot Locally (For Developers)
 
-> Skip this section if you're only using the hosted bot.
+> You do **not** need to create your own Discord bot. This code is configured to use the official hosted ADABot. Use this only if you want to run your own version with your own API keys.
 
 1. **Clone the repository**
 
     ```bash
-    git clone https://github.com/yourusername/discord-bot.git
-    cd discord-bot
+    git clone https://github.com/yourusername/ADABot.git
+    cd ADABot
     ```
 
 2. **Set up a virtual environment & install dependencies**
@@ -70,10 +70,11 @@ Click below to invite the bot with admin permissions:
     pip install -r requirements.txt
     ```
 
-3. **Add your API keys (if hosting yourself)**  
-    Edit `bot.py` and replace:
-    - `DISCORD_TOKEN`
-    - `OPENROUTER_API_KEY`
+3. **Insert your credentials**
+
+    Open `bot.py` and replace:
+    - `DISCORD_TOKEN` (optional if not self-hosting)
+    - `OPENROUTER_API_KEY` (needed for chat/quote)
 
 4. **Run the bot**
 
@@ -85,8 +86,8 @@ Click below to invite the bot with admin permissions:
 
 ## 📝 License
 
-This project is closed-source and all rights are reserved. You are allowed to use the hosted version via the invite link above. For development or distribution rights, please contact the author.
+This project is **closed-source** and all rights are reserved. You are free to use the hosted version via the invite link. For commercial use, forking, or deployment under a different name, please contact the author.
 
 ---
 
-Enjoy chatting, searching, joking, and more — all through one bot. 🎉  
+Enjoy chatting, searching, joking, and more — all through **ADABot**. 🧠✨
