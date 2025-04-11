@@ -47,7 +47,7 @@ ADABot is a Discord bot developed for the ADA AI Competition. The bot features c
 | `!quote`      | Sends a motivational quote in the format: *"quote" ~ person*                |
 | `!weather`    | Get current weather of any city (e.g., `!weather Paris`)                    |
 | `!joke`       | Get a random joke                                                           |
-| `!search`     | Returns a summary + link for a search term (e.g., `!search Python`)         |
+| `!search`     | Returns a summary of wikipedia article + link for a search term (e.g., `!search Python`)         |
 | `!movie`      | Suggests a random movie                                                     |
 | `!zodiac`     | Shows daily horoscope for a zodiac sign (e.g., `!zodiac Leo`)               |
 | `!define`     | Get definitions of a word (e.g., `!define tree`)                            |
