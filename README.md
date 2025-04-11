@@ -21,13 +21,12 @@ ADABot is a Discord bot developed for the ADA AI Competition. The bot features c
    cd ADABot
    ```
 
-2. **Set Your API Keys**
+2. **Set The Discord Token**
 
-   Open `bot.py` and replace the placeholder variables with your actual credentials:
+   Open `bot.py` and replace the placeholder variables with my actual credentials:
 
    ```python
-   DISCORD_TOKEN = 'MTM2MDIyODkwMzcyOTM2OTI3OA.GnKQOK.Div-zDG_VfBLmNxyC_ZhyZFDGoP4bj1_DXPveA'
-   OPENROUTER_API_KEY = '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'
+   DISCORD_TOKEN = '<Discord_Token>'
    ```
 
 3. **Add the Bot to Your Discord Server**
