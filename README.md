@@ -18,8 +18,8 @@ ADABot is a Discord bot developed for the ADA AI Competition. The bot features c
 1. **Clone the Repo**
 
    ```bash
-   git clone <https://github.com/ValehK08/ADABot>
-   cd <https://github.com/ValehK08/ADABot>
+   git clone https://github.com/ValehK08/ADABot.git
+   cd https://github.com/ValehK08/ADABot.git
    ```
 
 2. **Add the Bot to Your Discord Server**
@@ -50,7 +50,7 @@ ADABot is a Discord bot developed for the ADA AI Competition. The bot features c
 | `!search`     | Returns a summary + link for a search term (e.g., `!search Python`)         |
 | `!movie`      | Suggests a random movie                                                     |
 | `!zodiac`     | Shows daily horoscope for a zodiac sign (e.g., `!zodiac Leo`)               |
-| `!define`     | Get definitions of a word (e.g., `!define ephemeral`)                       |
+| `!define`     | Get definitions of a word (e.g., `!define tree`)                            |
 | `!info`       | Shows member list and count for your server                                 |
 
 ---
