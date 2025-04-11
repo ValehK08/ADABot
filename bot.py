@@ -6,8 +6,8 @@ import sqlite3
 from datetime import datetime
 import random
 
-DISCORD_TOKEN = 'MTM2MDIyODkwMzcyOTM2OTI3OA.GnKQOK.Div-zDG_VfBLmNxyC_ZhyZFDGoP4bj1_DXPveA'
-OPENROUTER_API_KEY = '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'
+DISCORD_TOKEN = 'Discord_token'
+OPENROUTER_API_KEY = 'OpenRouter_API_key'
 
 intents = discord.Intents.default()
 intents.message_content = True
