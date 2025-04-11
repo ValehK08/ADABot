@@ -45,12 +45,13 @@ ADABot is a Discord bot developed for the ADA AI Competition. The bot features c
 | `!chat`       | Talk with the AI. Returns intelligent responses using OpenRouter.           |
 | `!tone`       | Change AI response tone: `user-friendly` (default), `kid`, `rude`, `sarcastic` |
 | `!quote`      | Sends a motivational quote in the format: *"quote" ~ person*                |
-| `!weather`    | Get current weather of any city (e.g., `!weather Paris`)                    |
+| `!weather`    | Get current weather of any city                   |
 | `!joke`       | Get a random joke                                                           |
-| `!search`     | Returns a summary of wikipedia article + link for a search term (e.g., `!search Python`)         |
+| `!search`     | Returns a summary of wikipedia article + link for a search term         |
 | `!movie`      | Suggests a random movie                                                     |
-| `!zodiac`     | Shows daily horoscope for a zodiac sign (e.g., `!zodiac Leo`)               |
-| `!define`     | Get definitions of a word (e.g., `!define tree`)                            |
+| `!zodiac`     | Shows daily horoscope for a zodiac sign              |
+| `!define`     | Get definitions of a word                         |
+| `!info`     | Get informed about commands and their format                        |
 
 ---
 
