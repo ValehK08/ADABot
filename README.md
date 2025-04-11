@@ -1,8 +1,5 @@
-Sure! Here's the complete content formatted properly as a `README.md` file. You can copy this directly into a `README.md` in your GitHub repo:
 
-```markdown
 # ADABot
-
 ADABot is a Discord bot developed for the ADA AI Competition. It leverages an external AI API to process user prompts and provide dynamic, engaging responses. The bot features customizable response tones and various commands to interact with users in multiple ways.
 
 ---
@@ -90,14 +87,3 @@ ADABot uses SQLite for lightweight local data storage:
 The database (`botdata.db`) is automatically created on first run.
 
 ---
-
-## 📄 License
-
-This project is closed-source. You may use the provided bot and code locally for educational and testing purposes only. For redistribution or customization rights, please contact the developer.
-
----
-
-Use ADABot to chat, define, inspire, joke, and explore – all from your server.
-```
-
-Let me know if you'd like me to generate the `requirements.txt` file as well!
