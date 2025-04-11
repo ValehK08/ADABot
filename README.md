@@ -1,6 +1,6 @@
 
 # ADABot
-ADABot is a Discord bot developed for the ADA AI Competition. It leverages an external AI API to process user prompts and provide dynamic, engaging responses. The bot features customizable response tones and various commands to interact with users in multiple ways.
+ADABot is a Discord bot developed for the ADA AI Competition. The bot features customizable response tones and various commands to interact with users in multiple ways.
 
 ---
 
@@ -9,10 +9,8 @@ ADABot is a Discord bot developed for the ADA AI Competition. It leverages an ex
 - **Python 3.10+**
 - `discord.py`
 - `requests`
-- `sqlite3` (built-in with Python)
-
-> **Note:** Include your API keys directly in the code for testing as per competition rules.
-
+- `sqlite3`
+>Note: API Keys are included in the bot.py file already.
 ---
 
 ## 🚀 How to Run It
@@ -20,26 +18,17 @@ ADABot is a Discord bot developed for the ADA AI Competition. It leverages an ex
 1. **Clone the Repo**
 
    ```bash
-   git clone <repository_url>
-   cd <repository_folder>
+   git clone <https://github.com/ValehK08/ADABot>
+   cd <https://github.com/ValehK08/ADABot>
    ```
 
-2. **Configure API Keys**
-
-   Open the main file (e.g., `bot.py`) and edit these variables:
-
-   ```python
-   DISCORD_TOKEN = 'your_discord_bot_token'
-   OPENROUTER_API_KEY = 'your_openrouter_api_key'
-   ```
-
-3. **Add the Bot to Your Discord Server**
+2. **Add the Bot to Your Discord Server**
 
    Use this invite link to add ADABot with full permissions:
 
    [Add ADABot to Your Server](https://discord.com/oauth2/authorize?client_id=1360228903729369278&permissions=8&integration_type=0&scope=bot)
 
-4. **Run the Bot**
+3. **Run the Bot**
 
    Run the bot using:
 
