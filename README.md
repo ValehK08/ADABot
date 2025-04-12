@@ -77,7 +77,7 @@ ADABot is a Discord bot created for the ADA AI Competition. It offers customizab
 
 ## 🗃️ Data Handling
 
-ADABot uses SQLite for lightweight local data storage:
+ADABot uses SQLite for local data storage:
 
 - `messages` table – saves chat messages and timestamps
 - `members` table – stores server members and join dates
