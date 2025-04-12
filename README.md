@@ -1,6 +1,6 @@
 
 # ADABot
-ADABot is a Discord bot developed for the ADA AI Competition. The bot features customizable response tones and various commands to interact with users in multiple ways.
+ADABot is a Discord bot created for the ADA AI Competition. It offers customizable response tones, interactive commands, and a unique memory feature that stores previous conversations and user data in a .db file.
 
 ---
 
