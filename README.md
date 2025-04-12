@@ -10,6 +10,8 @@ ADABot is a Discord bot developed for the ADA AI Competition. The bot features c
 - `discord`
 - `requests`
 - `sqlite3`
+- `aiohttp`
+- `json`, `random`, `datetime`(built-in Python)
 ---
 
 ## 🚀 How to Run It
