@@ -7,7 +7,7 @@ ADABot is a Discord bot developed for the ADA AI Competition. The bot features c
 ## ✅ Requirements
 
 - **Python 3.10+**
-- `discord.py`
+- `discord`
 - `requests`
 - `sqlite3`
 ---
@@ -68,7 +68,6 @@ ADABot is a Discord bot developed for the ADA AI Competition. The bot features c
 - **OpenRouter API** – for AI responses and quotes
 - **wttr.in** – plain text weather data
 - **Official Joke API** – for random jokes
-- **DuckDuckGo API** – for search results
 - **Horoscope App API** – daily horoscope
 - **Dictionary API** – definitions and meanings
 
