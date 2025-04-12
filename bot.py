@@ -5,10 +5,11 @@ import json
 import sqlite3
 from datetime import datetime
 import random
+from discord import ui
 
 # Token and API keys
 DISCORD_TOKEN = '<Discord_Token>'
-OPENROUTER_API_KEY = '<OpenRouter_API_Key>'
+OPENROUTER_API_KEY = 'OpenRouter_API_Key'
 
 # Default Discord Bot Setting
 intents = discord.Intents.default()
@@ -33,6 +34,46 @@ tone_options = {
     "sarcastic": "You're a sarcastic human with a dry wit named ADABot. Keep your responses brief and witty. Just answer the prompt and don't add extra stuff. Keep it short and brief. Remember earlier conversation as memory, but only mention it if it helps answering. Focus only on the user's latest message.",
     "tutor": "You're a helpful tutor named ADABot. Answer clearly and briefly in a way beginners can understand. Just answer the prompt and don't add extra stuff. Keep it short and brief. Remember earlier conversation as memory, but only mention it if it helps answering. Focus only on the user's latest message."
 }
+
+# Tone Selection
+class ToneButtonsView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=60)
+        
+        for tone_name in tone_options.keys():
+            display_name = tone_name.replace('-', ' ').title()
+            emoji = self.get_emoji_for_tone(tone_name)
+            self.add_item(ToneButton(tone_name, display_name, emoji))
+    
+    def get_emoji_for_tone(self, tone_name):
+        emoji_map = {
+            "user-friendly": "😊",
+            "kid": "🧒",
+            "rude": "😠",
+            "sarcastic": "🙄",
+            "tutor": "📚"
+        }
+        return emoji_map.get(tone_name, "🤖")
+
+# Tone Button
+class ToneButton(discord.ui.Button):
+    def __init__(self, tone_id, display_name, emoji):
+        super().__init__(
+            style=discord.ButtonStyle.primary,
+            label=display_name,
+            custom_id=f"tone_{tone_id}",
+            emoji=emoji
+        )
+        self.tone_id = tone_id
+    
+    async def callback(self, interaction):
+        global AI_TONE
+        AI_TONE = tone_options[self.tone_id]
+        
+        await interaction.response.send_message(
+            f"Tone updated to **{self.tone_id}**!", 
+            ephemeral=True
+        )
 
 # Function for AI API usage(OpenRouter)
 async def ask_openrouter(prompt, tone=AI_TONE, history=[]):
@@ -90,7 +131,7 @@ async def info(ctx):
 Here are the available commands:
 
 - `!chat [message]` – Talk to the AI in your chosen tone.
-- `!tone [style]` – Change AI tone. Options: user-friendly, kid, rude, sarcastic.
+- `!tone` – Change AI tone using buttons.
 - `!quote` – Get a short motivational quote.
 - `!weather [city]` – Check weather for a city.
 - `!joke` – Hear a random joke.
@@ -101,21 +142,20 @@ Here are the available commands:
 """
     await ctx.send(help_message)
 
-# | !tone <user-friendly/rude/kid/sarcastic/tutor> | command for Customizable Tone Setting
+# | !tone | command for Customizable Tone Setting with Buttons
 @bot.command()
-async def tone(ctx, *, new_tone: str = None):
-    global AI_TONE
-    if new_tone is None:
-        await ctx.send(f"The current tone is: **{AI_TONE}**")
-        return
-
-    new_tone = new_tone.lower()
-    if new_tone in tone_options:
-        AI_TONE = tone_options[new_tone]
-        await ctx.send(f"Tone updated to **{new_tone}**.")
-    else:
-        available = ", ".join(tone_options.keys())
-        await ctx.send(f"Unknown tone. Available tones are: {available}.")
+async def tone(ctx):
+    current_tone = "unknown"
+    for tone_name, tone_text in tone_options.items():
+        if tone_text == AI_TONE:
+            current_tone = tone_name
+            break
+    
+    # Send message with buttons
+    await ctx.send(
+        f"**Current tone:** {current_tone}\nChoose a new tone for ADABot:", 
+        view=ToneButtonsView()
+    )
 
 # | !chat <prompt> | command for Chatting With AI
 @bot.command()
@@ -157,6 +197,7 @@ async def quote(ctx):
     result = await ask_openrouter(prompt, tone=AI_TONE)
     await ctx.send(f"💬 {result}")
 
+# | !weather <City> | command for Weather Information
 @bot.command()
 async def weather(ctx, *, city):
     geocode_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city}&count=1"
