@@ -68,7 +68,7 @@ ADABot is a Discord bot created for the ADA AI Competition. It offers customizab
 ## 📦 APIs Used
 
 - **OpenRouter API** – for AI responses and quotes
-- **wttr.in** – plain text weather data
+- **Open-Meteo** – plain text weather data
 - **Official Joke API** – for random jokes
 - **Horoscope App API** – daily horoscope
 - **Dictionary API** – definitions and meanings
