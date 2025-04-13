@@ -9,7 +9,7 @@ from discord import ui
 
 # Token and API keys
 DISCORD_TOKEN = '<Discord_Token>'
-OPENROUTER_API_KEY = 'OpenRouter_API_Key'
+OPENROUTER_API_KEY = '<OpenRouter_API_Key>'
 
 # Default Discord Bot Setting
 intents = discord.Intents.default()
@@ -283,16 +283,32 @@ async def search(ctx, *, query):
     except Exception as e:
         await ctx.send(f"❌ Error: {str(e)}")
 
-# | !movie | command for Random Movie Recommender
+# Movie Genre Buttons
+class MovieGenreView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=30)
+        genres = ["Sci-fi", "Romance", "Mystery", "Comedy", "Horror", "Fantasy"]
+        for genre in genres:
+            self.add_item(MovieGenreButton(genre))
+
+class MovieGenreButton(discord.ui.Button):
+    def __init__(self, genre):
+        super().__init__(
+            label=genre,
+            style=discord.ButtonStyle.secondary,
+            custom_id=f"genre_{genre.lower()}"
+        )
+        self.genre = genre
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)  # Acknowledge interaction fast
+        reply = await ask_openrouter(f"Recommend me a {self.genre} movie", tone=AI_TONE)
+        await interaction.followup.send(reply, ephemeral=True)
+
+# | !movie | command for Movie Recommender
 @bot.command()
 async def movie(ctx):
-    movies = [
-        "Inception (2010)", "The Matrix (1999)", "Interstellar (2014)",
-        "Parasite (2019)", "The Godfather (1972)", "Pulp Fiction (1994)",
-        "The Shawshank Redemption (1994)", "Forrest Gump (1994)",
-        "The Dark Knight (2008)", "Fight Club (1999)"
-    ]
-    await ctx.send(f"🎮 How about watching: {random.choice(movies)}")
+    await ctx.send("🎥 Choose a genre:", view=MovieGenreView())
 
 # | !zodiac <sign> | command for Daily Horoscope
 @bot.command()
