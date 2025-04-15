@@ -53,7 +53,7 @@ ADABot is a Discord bot created for the ADA AI Competition. It offers customizab
 | Command       | Description                                                                 |
 |---------------|-----------------------------------------------------------------------------|
 | `!chat <prompt>`       | Talk with the AI. Returns intelligent responses using OpenRouter.           |
-| `!tone`       | Change AI response tone: `user-friendly` (default), `kid`, `rude`, `sarcastic` |
+| `!tone`       | Change AI response tone: `user-friendly` (default), `kid`, `rude`, `sarcastic`, `tutor` and `brainrot`|
 | `!quote`      | Sends a motivational quote in the format: *"quote" ~ person*                |
 | `!weather <city>`    | Get current weather of any city                   |
 | `!joke`       | Get a random joke                                                           |
