@@ -69,24 +69,52 @@ On successful launch, the console will display a login confirmation.
 
 ---
 
-## ⚙️ Commands Reference
+Here's your chart, reformatted in clean and readable **Markdown** style for a `README.md` file. I've added headers, spacing, and consistent formatting to make it visually appealing and easy to scan:
 
-| Category           | Command Syntax               | Description                                                             |
-|--------------------|------------------------------|-------------------------------------------------------------------------|
-| **Chat & AI**      | `!chat <prompt>`             | Chat with Gemini AI using recent message history.                      |
-|                    | `!tone`                      | Choose an AI personality/tone for `!chat`.                             |
-| **Summarization**  | `!summarize` (+ attachment)  | Summarize .txt/.pdf/.docx files or text in images.                     |
-| **Image Generation** | `!generate <prompt>`        | Create AI-generated images based on your prompt.                       |
-| **News & Info**    | `!news <topic>`              | Fetch top 5 headlines and AI summarize your choice.                    |
-|                    | `!stock <symbol>`            | Get current/historical stock data, with AI analysis option.            |
-|                    | `!weather <city>`            | Display current weather conditions.                                    |
-|                    | `!thisday`                   | Fun historical fact for today’s date.                                  |
-|                    | `!zodiac <sign>`             | Daily horoscope for any zodiac sign.                                   |
-| **Fun & Social**   | `!meme`                      | Generate a random AI-driven meme.                                      |
-|                    | `!roast @user`               | Generate a playful roast for a user.                                   |
-|                    | `!compliment @user`          | Generate a thoughtful compliment for a user.                           |
-|                    | `!remindme <time> <message>` | Schedule a personal reminder using d/h/m/s notation.                   |
-| **Utility**        | `!info`                      | Display this help message.                                             |
+---
+
+## 📚 Command Reference
+### 🧠 Chat & AI
+| Command                | Description                                           |
+|------------------------|-------------------------------------------------------|
+| `!chat <prompt>`       | Chat with Gemini AI using recent message history.     |
+| `!tone`                | Choose an AI personality/tone for `!chat`.            |
+
+### 📝 Summarization
+| Command                         | Description                                                       |
+|----------------------------------|-------------------------------------------------------------------|
+| `!summarize` (+ attachment)     | Summarize `.txt`, `.pdf`, `.docx` files or text from images.     |
+
+### 🎨 Image Generation
+| Command                | Description                                           |
+|------------------------|-------------------------------------------------------|
+| `!generate <prompt>`   | Create AI-generated images based on your prompt.      |
+
+### 🗞️ News & Info
+| Command                | Description                                           |
+|------------------------|-------------------------------------------------------|
+| `!news <topic>`        | Fetch top 5 headlines and AI summarize your choice.   |
+| `!stock <symbol>`      | Get current/historical stock data with AI analysis.   |
+| `!weather <city>`      | Display current weather conditions.                   |
+| `!thisday`             | Fun historical fact for today’s date.                 |
+| `!zodiac <sign>`       | Daily horoscope for any zodiac sign.                  |
+
+### 😄 Fun & Social
+| Command                        | Description                                           |
+|--------------------------------|-------------------------------------------------------|
+| `!meme`                        | Generate a random AI-driven meme.                     |
+| `!roast @user`                 | Generate a playful roast for a user.                  |
+| `!compliment @user`            | Generate a thoughtful compliment for a user.          |
+| `!remindme <time> <message>`   | Schedule a personal reminder (d/h/m/s format).        |
+
+### 🛠️ Utility
+| Command        | Description                   |
+|----------------|-------------------------------|
+| `!info`        | Display this help message.     |
+
+---
+
+Let me know if you want to add icons, color highlights, or a collapsible/expandable layout for GitHub!
 
 ---
 
