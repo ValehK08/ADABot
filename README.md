@@ -46,14 +46,13 @@ ADABot is an advanced Discord bot powered by Google's Gemini AI, offering a suit
    ```
 3. **Configure API Keys**:
    - Open `adabot.py` (or your script file).
-   - Replace placeholders with your actual keys:
+   - Replace placeholders with the actual keys:
      ```python
      discord_token = "YOUR_DISCORD_BOT_TOKEN"
      gemini_api_key = "YOUR_GEMINI_API_KEY"
      news_api_key = "YOUR_NEWS_API_KEY"
      openrouter_api_key = "YOUR_OPENROUTER_API_KEY"
      ```
-   - **Security Tip**: Use environment variables or a `.env` file instead of hardcoding keys.
 4. **Discord Bot Permissions**:
    - Enable **Server Members Intent** and **Message Content Intent** in the Discord Developer Portal.
    - Ensure the bot has permissions: Read Messages, Send Messages, Attach Files, Embed Links, etc.
