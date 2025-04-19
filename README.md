@@ -1,157 +1,116 @@
-Okay, here is a formatted README.md file based on the provided Python code and your notes.
+## ADABot - Gemini & Multi-API Powered Discord Bot
 
-# ADABot - Gemini & Multi-API Powered Discord Bot
-
-ADABot is an advanced Discord bot integrating Google's Gemini AI for diverse functionalities. It features customizable AI response tones, file summarization (text, PDF, DOCX, images), AI image generation, news fetching & summarization, stock analysis, weather updates, horoscopes, meme generation, reminders, and social commands like roasting and complimenting. It utilizes a local SQLite database (`DataBase.db`) to store user information and message history for context-aware interactions.
+ADABot is an advanced Discord bot powered by Google's Gemini AI, offering a suite of features from conversational AI to file summarization, AI image generation, news updates, stock analysis, and fun social interactions. Built with Python and SQLite for context-aware responses, ADABot brings powerful AI capabilities directly into your Discord server.
 
 ---
 
-## ✨ Features
+## ✨ Key Features
 
-*   **🤖 Conversational AI:** Chat with Gemini AI (`!chat`), choosing from various personalities (`!tone`).
-*   **📄 File Summarization:** Summarize text from `.txt`, `.pdf`, `.docx` files, or text within images (`!summarize` with attachment).
-*   **🎨 Image Generation:** Create images based on prompts using Gemini (`!generate`).
-*   **📰 News & Information:** Get latest news headlines and AI summaries (`!news`), stock market data with AI analysis (`!stock`), weather forecasts (`!weather`), daily horoscopes (`!zodiac`), and historical facts (`!thisday`).
-*   **🎉 Fun & Social:** Generate AI-powered memes (`!meme`), roast (`!roast`) or compliment (`!compliment`) users, and set reminders (`!remindme`).
-*   **🧠 Contextual Memory:** Remembers recent conversation history from the channel (via SQLite DB) to provide more relevant responses in `!chat`, `!roast`, and `!compliment`.
-*   **⚙️ Database Integration:** Logs messages and user join dates to a local SQLite database.
+- **🤖 Conversational AI**: Engage with Gemini AI using `!chat <prompt>`, and personalize responses by selecting different personalities with `!tone`.
+- **📄 File Summarization**: Summarize text from `.txt`, `.pdf`, `.docx`, or even text within images using `!summarize` (attach your file or image).
+- **🎨 AI Image Generation**: Generate custom images from text prompts with `!generate <prompt>`.
+- **📰 News & Information**:
+  - `!news <topic>`: Fetch and summarize the latest headlines on any topic.
+  - `!stock <symbol>`: Retrieve real-time and historical stock data, with optional AI-driven financial analysis.
+  - `!weather <city>`: Get current weather conditions and forecasts.
+  - `!zodiac <sign>`: Receive daily horoscopes for all zodiac signs.
+  - `!thisday`: Discover historical facts relevant to today's date.
+- **🎉 Fun & Social**:
+  - `!meme`: Generate AI-powered memes.
+  - `!roast @user` / `!compliment @user`: Playfully roast or compliment members using context from recent chats.
+  - `!remindme <time> <message>`: Set personal reminders (supports d/h/m/s notation, e.g., `2h30m`).
+- **🧠 Contextual Memory**: Maintains recent conversation history and user join data via SQLite for richer, context-aware interactions.
 
 ---
 
 ## ✅ Requirements
 
-*   **Python 3.10+**
-*   Required Python libraries:
-    *   `discord.py`
-    *   `google-generativeai`
-    *   `requests`
-    *   `sqlite3` (usually built-in)
-    *   `Pillow` (PIL)
-    *   `PyPDF2`
-    *   `python-docx`
-    *   `nest_asyncio`
-    *   `python-dateutil`
-    *   `newsapi-python`
-    *   `beautifulsoup4`
-    *   `yfinance`
-    *   `asyncio` (built-in)
-    *   `json` (built-in)
-    *   `random` (built-in)
+- **Python**: 3.10 or higher
+- **Dependencies** (install via `pip`):
+  ```bash
+  pip install discord.py google-generativeai requests Pillow PyPDF2 python-docx nest_asyncio python-dateutil newsapi-python beautifulsoup4 yfinance
+  ```
 
-You can install most dependencies using pip:
+---
+
+## ⚙️ Setup & Configuration
+
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/ValehK08/ADABot.git
+   cd ADABot
+   ```
+2. **Install Dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. **Configure API Keys**:
+   - Open `adabot.py` (or your script file).
+   - Replace placeholders with your actual keys:
+     ```python
+     discord_token = "YOUR_DISCORD_BOT_TOKEN"
+     gemini_api_key = "YOUR_GEMINI_API_KEY"
+     news_api_key = "YOUR_NEWS_API_KEY"
+     openrouter_api_key = "YOUR_OPENROUTER_API_KEY"
+     ```
+   - **Security Tip**: Use environment variables or a `.env` file instead of hardcoding keys.
+4. **Discord Bot Permissions**:
+   - Enable **Server Members Intent** and **Message Content Intent** in the Discord Developer Portal.
+   - Ensure the bot has permissions: Read Messages, Send Messages, Attach Files, Embed Links, etc.
+
+---
+
+## ▶️ Running ADABot
+
+Start the bot with:
 ```bash
-pip install discord.py google-generativeai requests Pillow PyPDF2 python-docx nest_asyncio python-dateutil newsapi-python beautifulsoup4 yfinance
+python bot.py  # or your script filename
+```
+On successful launch, the console will display a login confirmation.
 
-🚀 Setup & Configuration
+---
 
-Clone the Repository:
+## ⚙️ Commands Reference
 
-git clone <your-repo-url>
-cd <your-repo-directory>
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-Bash
-IGNORE_WHEN_COPYING_END
+| Category           | Command Syntax               | Description                                                             |
+|--------------------|------------------------------|-------------------------------------------------------------------------|
+| **Chat & AI**      | `!chat <prompt>`             | Chat with Gemini AI using recent message history.                      |
+|                    | `!tone`                      | Choose an AI personality/tone for `!chat`.                             |
+| **Summarization**  | `!summarize` (+ attachment)  | Summarize .txt/.pdf/.docx files or text in images.                     |
+| **Image Generation** | `!generate <prompt>`        | Create AI-generated images based on your prompt.                       |
+| **News & Info**    | `!news <topic>`              | Fetch top 5 headlines and AI summarize your choice.                    |
+|                    | `!stock <symbol>`            | Get current/historical stock data, with AI analysis option.            |
+|                    | `!weather <city>`            | Display current weather conditions.                                    |
+|                    | `!thisday`                   | Fun historical fact for today’s date.                                  |
+|                    | `!zodiac <sign>`             | Daily horoscope for any zodiac sign.                                   |
+| **Fun & Social**   | `!meme`                      | Generate a random AI-driven meme.                                      |
+|                    | `!roast @user`               | Generate a playful roast for a user.                                   |
+|                    | `!compliment @user`          | Generate a thoughtful compliment for a user.                           |
+|                    | `!remindme <time> <message>` | Schedule a personal reminder using d/h/m/s notation.                   |
+| **Utility**        | `!info`                      | Display this help message.                                             |
 
-Install Dependencies:
+---
 
-pip install -r requirements.txt # Make sure you have the requirements listed above in a file named requirements.txt
-# Or install manually as shown in the Requirements section
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-Bash
-IGNORE_WHEN_COPYING_END
+## 📦 APIs & Integrations
 
-Configure API Keys:
-Open the Python script (e.g., adabot.py) and replace the placeholder strings with your actual API keys/tokens:
+- **Discord API** (`discord.py`)
+- **Google Gemini AI** (`google-generativeai`)
+- **NewsAPI** (`newsapi-python`)
+- **OpenRouter** (for meme caption generation)
+- **Imgflip** (meme templates & generation)
+- **Open-Meteo** (weather data)
+- **Horoscope API** (daily horoscopes)
+- **Yahoo Finance** (`yfinance`)
 
-discord_token = "YOUR_DISCORD_BOT_TOKEN"
-gemini = "YOUR_GEMINI_API_KEY"
-news_api = "YOUR_NEWS_API_KEY"
-openrouter = "YOUR_OPENROUTER_API_KEY" # Used for the !meme command's text generation
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-Python
-IGNORE_WHEN_COPYING_END
+---
 
-⚠️ Security Note: For production or shared bots, it is highly recommended to use environment variables or a configuration file (.env) to store sensitive keys instead of hardcoding them directly in the script.
+## 🗃️ Data Handling & Storage
 
-Discord Bot Permissions:
-Ensure your Discord bot has the necessary Intents enabled in the Discord Developer Portal (especially Server Members Intent and Message Content Intent). It also needs appropriate permissions (like Read Messages, Send Messages, Attach Files, Embed Links, etc.) when you invite it to your server.
+ADABot uses an SQLite database (`DataBase.db`) to persist user and message data:
 
-▶️ How to Run
+- **`users` table**: Tracks `user_id`, `username`, and `join_date`.
+- **`messages` table**: Logs `username`, `message`, and `timestamp` for context in AI interactions.
 
-Execute the Python script:
+Database is auto-created on first run if not present.
 
-python your_script_name.py # Replace 'your_script_name.py' with the actual filename
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-Bash
-IGNORE_WHEN_COPYING_END
-
-The bot should log in and print a confirmation message to your console.
-
-⚙️ Commands
-
-Here's a breakdown of the available commands:
-
-Command	Description	Example Usage
-🤖 Chat & AI		
-!chat <prompt>	Chat with the Gemini AI. Uses recent message history for context.	!chat What's the weather like?
-!tone	Opens a selection menu to change the AI's personality/tone for !chat.	!tone
-!summarize (+ attachment)	Summarizes text from attached .txt, .pdf, .docx files, or describes/summarizes attached images.	!summarize (with file attached)
-!generate <prompt>	Generates an image using AI based on the provided text prompt.	!generate A cat riding a bike
-📰 News & Info		
-!news <topic>	Fetches 5 recent news headlines on a topic and lets you choose one for an AI-generated summary.	!news technology
-!stock <symbol>	Provides current and historical stock data for a symbol, with a button for AI financial analysis.	!stock AAPL
-!weather <city>	Fetches and displays the current weather conditions for the specified city.	!weather London
-!thisday	Shares an interesting historical fact related to the current date.	!thisday
-!zodiac <sign>	Retrieves and displays the daily horoscope for the specified zodiac sign.	!zodiac Aries
-🎉 Fun & Social		
-!meme	Generates a random meme using a template and AI-generated captions (via OpenRouter & Imgflip).	!meme
-!roast @user	Generates a creative roast for the mentioned user, using message history/username for context.	!roast @SomeUser
-!compliment @user	Generates a thoughtful compliment for the mentioned user, using message history/username for context.	!compliment @AnotherUser
-!remindme <time> <message>	Sets a reminder. Time format uses d/h/m/s (e.g., 1h30m).	!remindme 2h Check email
-ℹ️ Utility		
-!info	Displays this help message listing all available commands and their descriptions.	!info
-📦 APIs Used
-
-Discord API (via discord.py)
-
-Google Gemini API (via google-generativeai) - For chat, summarization, image generation, analysis, etc.
-
-NewsAPI (via newsapi-python & requests) - For fetching news headlines.
-
-OpenRouter API (via requests) - For AI model access (!meme caption generation).
-
-Imgflip API (via requests) - For meme template fetching and generation.
-
-Open-Meteo APIs (via requests) - For geocoding and weather data.
-
-Horoscope API (horoscope-app-api.vercel.app via requests) - For daily horoscopes.
-
-Yahoo Finance API (via yfinance) - For stock market data.
-
-🗃️ Data Handling
-
-ADABot uses a local SQLite database file named DataBase.db to persist data:
-
-users table: Stores basic information about server members (user_id, username, join_date). Populated when a member joins.
-
-messages table: Logs messages sent in channels the bot can read (username, message, timestamp). This history is used to provide context for the !chat, !roast, and !compliment commands.
-
-The database file is created automatically in the same directory as the script if it doesn't exist.
-
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-IGNORE_WHEN_COPYING_END
+---
