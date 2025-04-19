@@ -29,6 +29,8 @@ ADABot is an advanced Discord bot powered by Google's Gemini AI, offering a suit
 - **Dependencies** (install via `pip`):
   ```bash
   pip install discord.py google-generativeai requests Pillow PyPDF2 python-docx nest_asyncio python-dateutil newsapi-python beautifulsoup4 yfinance
+  OR
+  pip install -r requirements.txt
   ```
 
 ---
@@ -53,9 +55,6 @@ ADABot is an advanced Discord bot powered by Google's Gemini AI, offering a suit
      news_api_key = "YOUR_NEWS_API_KEY"
      openrouter_api_key = "YOUR_OPENROUTER_API_KEY"
      ```
-4. **Discord Bot Permissions**:
-   - Enable **Server Members Intent** and **Message Content Intent** in the Discord Developer Portal.
-   - Ensure the bot has permissions: Read Messages, Send Messages, Attach Files, Embed Links, etc.
 
 ---
 
@@ -68,8 +67,6 @@ python bot.py  # or your script filename
 On successful launch, the console will display a login confirmation.
 
 ---
-
-Here's your chart, reformatted in clean and readable **Markdown** style for a `README.md` file. I've added headers, spacing, and consistent formatting to make it visually appealing and easy to scan:
 
 ---
 
@@ -113,9 +110,6 @@ Here's your chart, reformatted in clean and readable **Markdown** style for a `R
 | `!info`        | Display this help message.     |
 
 ---
-
-Let me know if you want to add icons, color highlights, or a collapsible/expandable layout for GitHub!
-
 ---
 
 ## 📦 APIs & Integrations
