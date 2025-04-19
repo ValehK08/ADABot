@@ -29,8 +29,6 @@ ADABot is an advanced Discord bot powered by Google's Gemini AI, offering a suit
 - **Dependencies** (install via `pip`):
   ```bash
   pip install discord.py google-generativeai requests Pillow PyPDF2 python-docx nest_asyncio python-dateutil newsapi-python beautifulsoup4 yfinance
-  OR
-  pip install -r requirements.txt
   ```
 
 ---
