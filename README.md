@@ -1,87 +1,157 @@
+Okay, here is a formatted README.md file based on the provided Python code and your notes.
 
-# ADABot
-ADABot is a Discord bot created for the ADA AI Competition. It offers customizable response tones, interactive commands, and a unique memory feature that stores previous conversations and user data in a .db file.
+# ADABot - Gemini & Multi-API Powered Discord Bot
+
+ADABot is an advanced Discord bot integrating Google's Gemini AI for diverse functionalities. It features customizable AI response tones, file summarization (text, PDF, DOCX, images), AI image generation, news fetching & summarization, stock analysis, weather updates, horoscopes, meme generation, reminders, and social commands like roasting and complimenting. It utilizes a local SQLite database (`DataBase.db`) to store user information and message history for context-aware interactions.
+
+---
+
+## ✨ Features
+
+*   **🤖 Conversational AI:** Chat with Gemini AI (`!chat`), choosing from various personalities (`!tone`).
+*   **📄 File Summarization:** Summarize text from `.txt`, `.pdf`, `.docx` files, or text within images (`!summarize` with attachment).
+*   **🎨 Image Generation:** Create images based on prompts using Gemini (`!generate`).
+*   **📰 News & Information:** Get latest news headlines and AI summaries (`!news`), stock market data with AI analysis (`!stock`), weather forecasts (`!weather`), daily horoscopes (`!zodiac`), and historical facts (`!thisday`).
+*   **🎉 Fun & Social:** Generate AI-powered memes (`!meme`), roast (`!roast`) or compliment (`!compliment`) users, and set reminders (`!remindme`).
+*   **🧠 Contextual Memory:** Remembers recent conversation history from the channel (via SQLite DB) to provide more relevant responses in `!chat`, `!roast`, and `!compliment`.
+*   **⚙️ Database Integration:** Logs messages and user join dates to a local SQLite database.
 
 ---
 
 ## ✅ Requirements
 
-- **Python 3.10+**
-- `discord`
-- `requests`
-- `sqlite3`
-- `aiohttp`
-- `json`, `random`, `datetime`(built-in Python)
----
+*   **Python 3.10+**
+*   Required Python libraries:
+    *   `discord.py`
+    *   `google-generativeai`
+    *   `requests`
+    *   `sqlite3` (usually built-in)
+    *   `Pillow` (PIL)
+    *   `PyPDF2`
+    *   `python-docx`
+    *   `nest_asyncio`
+    *   `python-dateutil`
+    *   `newsapi-python`
+    *   `beautifulsoup4`
+    *   `yfinance`
+    *   `asyncio` (built-in)
+    *   `json` (built-in)
+    *   `random` (built-in)
 
-## 🚀 How to Run It
+You can install most dependencies using pip:
+```bash
+pip install discord.py google-generativeai requests Pillow PyPDF2 python-docx nest_asyncio python-dateutil newsapi-python beautifulsoup4 yfinance
 
-1. **Clone the Repo**
+🚀 Setup & Configuration
 
-   ```bash
-   git clone https://github.com/ValehK08/ADABot.git
-   cd ADABot
-   ```
+Clone the Repository:
 
-2. **Set Discord Token and The API Keys**
+git clone <your-repo-url>
+cd <your-repo-directory>
+IGNORE_WHEN_COPYING_START
+content_copy
+download
+Use code with caution.
+Bash
+IGNORE_WHEN_COPYING_END
 
-   Open `bot.py` and replace the placeholder variables with my actual credentials:
+Install Dependencies:
 
-   ```python
-   DISCORD_TOKEN = '<Discord_Token>'
-   OPENROUTER_API_KEY = '<OpenRouter_API_Key>'
-   ```
+pip install -r requirements.txt # Make sure you have the requirements listed above in a file named requirements.txt
+# Or install manually as shown in the Requirements section
+IGNORE_WHEN_COPYING_START
+content_copy
+download
+Use code with caution.
+Bash
+IGNORE_WHEN_COPYING_END
 
-3. **Add the Bot to Your Discord Server**
+Configure API Keys:
+Open the Python script (e.g., adabot.py) and replace the placeholder strings with your actual API keys/tokens:
 
-   Use this invite link to add ADABot with full permissions:
+discord_token = "YOUR_DISCORD_BOT_TOKEN"
+gemini = "YOUR_GEMINI_API_KEY"
+news_api = "YOUR_NEWS_API_KEY"
+openrouter = "YOUR_OPENROUTER_API_KEY" # Used for the !meme command's text generation
+IGNORE_WHEN_COPYING_START
+content_copy
+download
+Use code with caution.
+Python
+IGNORE_WHEN_COPYING_END
 
-   [Add ADABot to Your Server](https://discord.com/oauth2/authorize?client_id=1360228903729369278&permissions=8&integration_type=0&scope=bot)
+⚠️ Security Note: For production or shared bots, it is highly recommended to use environment variables or a configuration file (.env) to store sensitive keys instead of hardcoding them directly in the script.
 
-4. **Run the Bot**
+Discord Bot Permissions:
+Ensure your Discord bot has the necessary Intents enabled in the Discord Developer Portal (especially Server Members Intent and Message Content Intent). It also needs appropriate permissions (like Read Messages, Send Messages, Attach Files, Embed Links, etc.) when you invite it to your server.
 
-   Run the bot using:
+▶️ How to Run
 
-   ```bash
-   python bot.py
-   ```
+Execute the Python script:
 
----
+python your_script_name.py # Replace 'your_script_name.py' with the actual filename
+IGNORE_WHEN_COPYING_START
+content_copy
+download
+Use code with caution.
+Bash
+IGNORE_WHEN_COPYING_END
 
-## 🧠 Features & Commands
+The bot should log in and print a confirmation message to your console.
 
-| Command       | Description                                                                 |
-|---------------|-----------------------------------------------------------------------------|
-| `!chat <prompt>`       | Talk with the AI. Returns intelligent responses using OpenRouter.           |
-| `!tone`       | Change AI response tone: `user-friendly` (default), `kid`, `rude`, `sarcastic`, `tutor` and `brainrot`|
-| `!quote`      | Sends a motivational quote in the format: *"quote" ~ person*                |
-| `!weather <city>`    | Get current weather of any city                   |
-| `!joke`       | Get a random joke                                                           |
-| `!search <topic>`     | Returns a summary of wikipedia article + link for a search term         |
-| `!movie`      | Recommends a movie                                                     |
-| `!zodiac <sign>`     | Shows daily horoscope for a zodiac sign              |
-| `!define <word>`     | Get definitions of a word                         |
-| `!info`     | Get informed about commands and their format                        |
+⚙️ Commands
 
----
+Here's a breakdown of the available commands:
 
-## 📦 APIs Used
+Command	Description	Example Usage
+🤖 Chat & AI		
+!chat <prompt>	Chat with the Gemini AI. Uses recent message history for context.	!chat What's the weather like?
+!tone	Opens a selection menu to change the AI's personality/tone for !chat.	!tone
+!summarize (+ attachment)	Summarizes text from attached .txt, .pdf, .docx files, or describes/summarizes attached images.	!summarize (with file attached)
+!generate <prompt>	Generates an image using AI based on the provided text prompt.	!generate A cat riding a bike
+📰 News & Info		
+!news <topic>	Fetches 5 recent news headlines on a topic and lets you choose one for an AI-generated summary.	!news technology
+!stock <symbol>	Provides current and historical stock data for a symbol, with a button for AI financial analysis.	!stock AAPL
+!weather <city>	Fetches and displays the current weather conditions for the specified city.	!weather London
+!thisday	Shares an interesting historical fact related to the current date.	!thisday
+!zodiac <sign>	Retrieves and displays the daily horoscope for the specified zodiac sign.	!zodiac Aries
+🎉 Fun & Social		
+!meme	Generates a random meme using a template and AI-generated captions (via OpenRouter & Imgflip).	!meme
+!roast @user	Generates a creative roast for the mentioned user, using message history/username for context.	!roast @SomeUser
+!compliment @user	Generates a thoughtful compliment for the mentioned user, using message history/username for context.	!compliment @AnotherUser
+!remindme <time> <message>	Sets a reminder. Time format uses d/h/m/s (e.g., 1h30m).	!remindme 2h Check email
+ℹ️ Utility		
+!info	Displays this help message listing all available commands and their descriptions.	!info
+📦 APIs Used
 
-- **OpenRouter API** – for AI responses and quotes
-- **Open-Meteo** – plain text weather data
-- **Official Joke API** – for random jokes
-- **Horoscope App API** – daily horoscope
-- **Dictionary API** – definitions and meanings
+Discord API (via discord.py)
 
----
+Google Gemini API (via google-generativeai) - For chat, summarization, image generation, analysis, etc.
 
-## 🗃️ Data Handling
+NewsAPI (via newsapi-python & requests) - For fetching news headlines.
 
-ADABot uses SQLite for local data storage:
+OpenRouter API (via requests) - For AI model access (!meme caption generation).
 
-- `messages` table – saves chat messages and timestamps
-- `members` table – stores server members and join dates
+Imgflip API (via requests) - For meme template fetching and generation.
 
-The database (`botdata.db`) is automatically created on first run.
+Open-Meteo APIs (via requests) - For geocoding and weather data.
 
----
+Horoscope API (horoscope-app-api.vercel.app via requests) - For daily horoscopes.
+
+Yahoo Finance API (via yfinance) - For stock market data.
+
+🗃️ Data Handling
+
+ADABot uses a local SQLite database file named DataBase.db to persist data:
+
+users table: Stores basic information about server members (user_id, username, join_date). Populated when a member joins.
+
+messages table: Logs messages sent in channels the bot can read (username, message, timestamp). This history is used to provide context for the !chat, !roast, and !compliment commands.
+
+The database file is created automatically in the same directory as the script if it doesn't exist.
+
+IGNORE_WHEN_COPYING_START
+content_copy
+download
+Use code with caution.
+IGNORE_WHEN_COPYING_END
