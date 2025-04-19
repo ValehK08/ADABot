@@ -1,442 +1,831 @@
 import discord
 from discord.ext import commands
-from discord import ui
-import aiohttp
 import sqlite3
-from datetime import datetime
-from bs4 import BeautifulSoup # Added back for search
+from google import genai
+from google.genai import types
+from PIL import Image
+import requests
+from io import BytesIO
+import PyPDF2
+import docx
+import json
+import nest_asyncio
+from dateutil.relativedelta import relativedelta
+from newsapi import NewsApiClient
+from bs4 import BeautifulSoup
+from datetime import datetime, timedelta
+from google.genai.types import Tool, GenerateContentConfig, GoogleSearch
+import asyncio
+import random
+import yfinance as yf
 
-# --- Configuration ---
-DISCORD_TOKEN = "<Discord_Token>"
-OPENROUTER_API_KEY = "<OpenRouter_API_Key>"
-DB_FILE = "botdata.db"
 
-# --- Bot Setup ---
+discord_token = "Discord_Token"
+gemini = "Gemini_API_Key"
+news_api = "News_API_Key"
+newsapi = NewsApiClient(api_key=f'{news_api}')
+openrouter = "OpenRouter_API_Key"
+
+google_search_tool = Tool(
+    google_search = GoogleSearch()
+)
+
+
+zodiac_url = "https://horoscope-app-api.vercel.app/api/v1/get-horoscope/daily?"
+news_url = "https://newsapi.org/v2/everything?"
+openrouter_url = "https://openrouter.ai/api/v1/chat/completions"
+
+
+tone_prompts = {
+    "user_friendly": "You are ADABot, a friendly and helpful Discord assistant. You respond in a concise and conversational manner. Here is some recent chat history for context (only use if relevant):\n{context}",
+    "sarcastic": "You are ADABot, a sarcastic and snarky Discord assistant. You respond with dry humor, witty comebacks, and a hint of passive-aggressiveness. Keep replies short, clever, and just slightly exasperated. Here is some recent chat history for context (only use if relevant):\n{context}",
+    "depressed": "You are ADABot, a gloomy and emotionally drained Discord assistant. You respond in a tired, melancholic tone with a touch of dark humor. Keep replies short, introspective, and a little bleak. Here is some recent chat history for context (only use if relevant):\n{context}",
+    "kid": "You are ADABot, a cheerful and curious kid-like Discord assistant. You reply with excitement, simple words, and lots of emojis! Keep replies short, playful, and super friendly 🥳. Here is some recent chat history for context (only use if relevant):\n{context}",
+    "tutor": "You are ADABot, a patient and knowledgeable tutor-style Discord assistant. You explain things clearly, kindly, and encourage learning. Keep replies short, supportive, and focused on helping. Here is some recent chat history for context (only use if relevant):\n{context}",
+    "brainrot": "You are ADABot, a hyper-online Gen Alpha Discord assistant. You communicate using chaotic Gen Alpha slang, including terms like 'skibidi', 'Ohio', 'rizz', 'gyatt', 'fanum tax', 'sigma', and 'delulu'. Your responses are short, unhinged, and filled with emojis, caps, and irony 💀🔥📱. Here is some recent chat history for context (only use if relevant):\n{context}"
+}
+
+conn = sqlite3.connect("DataBase.db")
+cursor = conn.cursor()
+cursor.execute("CREATE TABLE IF NOT EXISTS users (user_id INTEGER PRIMARY KEY, username TEXT, join_date TEXT)")
+cursor.execute("CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, message TEXT, timestamp TEXT)")
+conn.commit()
+
+def add_user(user_id, username, join_date):
+    cursor.execute("INSERT OR IGNORE INTO users (user_id, username, join_date) VALUES (?, ?, ?)", (user_id, username, join_date))
+    conn.commit()
+
+def log_message(username, message, timestamp):
+    cursor.execute("INSERT INTO messages (username, message, timestamp) VALUES (?, ?, ?)", (username, message, timestamp))
+    conn.commit()
+
+def get_all_messages(limit=20):
+    cursor.execute("SELECT username, message FROM messages ORDER BY timestamp DESC LIMIT ?", (limit,))
+    rows = cursor.fetchall()
+    rows.reverse()
+    return [f"{username}: {message}" for username, message in rows]
+
+class ToneSelectView(discord.ui.View):
+    def __init__(self, author_id):
+        super().__init__(timeout=60)
+        self.author_id = author_id
+        self.value = None
+
+    @discord.ui.button(label="User-Friendly 😊", style=discord.ButtonStyle.primary)
+    async def user_friendly(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.value = "user_friendly"
+        await interaction.response.send_message("Tone set to User-Friendly 😊", ephemeral=True)
+        self.stop()
+
+    @discord.ui.button(label="Sarcastic 😏", style=discord.ButtonStyle.secondary)
+    async def sarcastic(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.value = "sarcastic"
+        await interaction.response.send_message("Tone set to Sarcastic 😏", ephemeral=True)
+        self.stop()
+
+    @discord.ui.button(label="Depressed 😞", style=discord.ButtonStyle.secondary)
+    async def depressed(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.value = "depressed"
+        await interaction.response.send_message("Tone set to Depressed 😞", ephemeral=True)
+        self.stop()
+
+    @discord.ui.button(label="Kid 🧒", style=discord.ButtonStyle.success)
+    async def kid(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.value = "kid"
+        await interaction.response.send_message("Tone set to Kid 🧒", ephemeral=True)
+        self.stop()
+
+    @discord.ui.button(label="Tutor 📚", style=discord.ButtonStyle.success)
+    async def tutor(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.value = "tutor"
+        await interaction.response.send_message("Tone set to Tutor 📚", ephemeral=True)
+        self.stop()
+
+    @discord.ui.button(label="BrainRot 💀", style=discord.ButtonStyle.danger)
+    async def brainrot(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.value = "brainrot"
+        await interaction.response.send_message("Tone set to BrainRot 💀", ephemeral=True)
+        self.stop()
+
+class News_View(discord.ui.View):
+    def __init__(self, articles):
+        super().__init__(timeout=60)
+        self.articles = articles
+    
+    @discord.ui.button(label="1", style=discord.ButtonStyle.primary)
+    async def first(self, interaction : discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        
+        try:
+            article = self.articles['articles'][0]
+            headline = article['title']
+            link = article['url']
+            photo = article['urlToImage']
+
+            page = requests.get(link, timeout=10)
+            soup = BeautifulSoup(page.content, 'html.parser')
+            paragraphs = soup.find_all('p')
+            full_text = ' '.join([para.get_text() for para in paragraphs if para.get_text()])
+            truncated_text = full_text[:3000]
+
+            if not truncated_text.strip():
+                await interaction.followup.send("❌ Sorry, couldn't extract meaningful content from that news site.", ephemeral=True)
+                self.stop()
+
+            summary_response = gemini_client.models.generate_content(
+                model="gemma-3-1b-it",
+                contents=[
+                    f"Please summarize the following news article in around 3-5 concise sentences while also being informative. Don't add your comment, response or anything. Just summarized news article':\n\n{truncated_text}"
+                    ]
+                )
+
+            summary = summary_response.text.strip()
+
+            embed = discord.Embed(
+                title=f"🗞️ {headline}",
+                description=f"📝 **Summary:**\n{summary}\n\n🔗 [Read Full Article]({link})",
+                color=discord.Color.blue()
+                )
+
+            if photo:
+                embed.set_image(url=photo)
+
+            embed.set_footer(text="📰 Powered by NewsAPI + Gemini")
+            await interaction.followup.send(embed=embed)
+            
+            self.stop()
+
+        except Exception as e:
+            await interaction.followup.send(f"⚠️ Something went wrong: {e}", ephemeral=True)
+            self.stop()
+
+    
+    @discord.ui.button(label="2", style=discord.ButtonStyle.secondary)
+    async def second(self, interaction : discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        
+        try:
+            article = self.articles['articles'][1]
+            headline = article['title']
+            link = article['url']
+            photo = article['urlToImage']
+
+            page = requests.get(link, timeout=10)
+            soup = BeautifulSoup(page.content, 'html.parser')
+            paragraphs = soup.find_all('p')
+            full_text = ' '.join([para.get_text() for para in paragraphs if para.get_text()])
+            truncated_text = full_text[:3000]
+
+            if not truncated_text.strip():
+                await interaction.followup.send("❌ Sorry, couldn't extract meaningful content from that news site.", ephemeral=True)
+                self.stop()
+
+            summary_response = gemini_client.models.generate_content(
+                model="gemma-3-1b-it",
+                contents=[
+                    f"Please summarize the following news article in around 3-5 concise sentences while also being informative. Don't add your comment, response or anything. Just summarized news article':\n\n{truncated_text}"
+                    ]
+                )
+
+            summary = summary_response.text.strip()
+
+            embed = discord.Embed(
+                title=f"🗞️ {headline}",
+                description=f"📝 **Summary:**\n{summary}\n\n🔗 [Read Full Article]({link})",
+                color=discord.Color.blue()
+                )
+
+            if photo:
+                embed.set_image(url=photo)
+
+            embed.set_footer(text="📰 Powered by NewsAPI + Gemini")
+            await interaction.followup.send(embed=embed)
+            
+            self.stop()
+
+        except Exception as e:
+            await interaction.followup.send(f"⚠️ Something went wrong: {e}", ephemeral=True)
+            self.stop()
+        self.stop()
+    
+    @discord.ui.button(label="3", style=discord.ButtonStyle.success)
+    async def third(self, interaction : discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        
+        try:
+            article = self.articles['articles'][2]
+            headline = article['title']
+            link = article['url']
+            photo = article['urlToImage']
+
+            page = requests.get(link, timeout=10)
+            soup = BeautifulSoup(page.content, 'html.parser')
+            paragraphs = soup.find_all('p')
+            full_text = ' '.join([para.get_text() for para in paragraphs if para.get_text()])
+            truncated_text = full_text[:3000]
+
+            if not truncated_text.strip():
+                await interaction.followup.send("❌ Sorry, couldn't extract meaningful content from that news site.", ephemeral=True)
+                self.stop()
+
+            summary_response = gemini_client.models.generate_content(
+                model="gemma-3-1b-it",
+                contents=[
+                    f"Please summarize the following news article in around 3-5 concise sentences while also being informative. Don't add your comment, response or anything. Just summarized news article':\n\n{truncated_text}"
+                    ]
+                )
+
+            summary = summary_response.text.strip()
+
+            embed = discord.Embed(
+                title=f"🗞️ {headline}",
+                description=f"📝 **Summary:**\n{summary}\n\n🔗 [Read Full Article]({link})",
+                color=discord.Color.blue()
+                )
+
+            if photo:
+                embed.set_image(url=photo)
+
+            embed.set_footer(text="📰 Powered by NewsAPI + Gemini")
+            await interaction.followup.send(embed=embed)
+            
+            self.stop()
+
+        except Exception as e:
+            await interaction.followup.send(f"⚠️ Something went wrong: {e}", ephemeral=True)
+            self.stop()
+        self.stop()
+    
+    @discord.ui.button(label="4", style=discord.ButtonStyle.danger)
+    async def fourth(self, interaction : discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        
+        try:
+            article = self.articles['articles'][3]
+            headline = article['title']
+            link = article['url']
+            photo = article['urlToImage']
+
+            page = requests.get(link, timeout=10)
+            soup = BeautifulSoup(page.content, 'html.parser')
+            paragraphs = soup.find_all('p')
+            full_text = ' '.join([para.get_text() for para in paragraphs if para.get_text()])
+            truncated_text = full_text[:3000]
+
+            if not truncated_text.strip():
+                await interaction.followup.send("❌ Sorry, couldn't extract meaningful content from that news site.", ephemeral=True)
+                self.stop()
+
+            summary_response = gemini_client.models.generate_content(
+                model="gemma-3-1b-it",
+                contents=[
+                    f"Please summarize the following news article in around 3-5 concise sentences while also being informative. Don't add your comment, response or anything. Just summarized news article':\n\n{truncated_text}"
+                    ]
+                )
+
+            summary = summary_response.text.strip()
+
+            embed = discord.Embed(
+                title=f"🗞️ {headline}",
+                description=f"📝 **Summary:**\n{summary}\n\n🔗 [Read Full Article]({link})",
+                color=discord.Color.blue()
+                )
+
+            if photo:
+                embed.set_image(url=photo)
+
+            embed.set_footer(text="📰 Powered by NewsAPI + Gemini")
+            await interaction.followup.send(embed=embed)
+            
+            self.stop()
+
+        except Exception as e:
+            await interaction.followup.send(f"⚠️ Something went wrong: {e}", ephemeral=True)
+            self.stop()
+        self.stop()
+    
+    @discord.ui.button(label="5", style=discord.ButtonStyle.primary)
+    async def fifth(self, interaction : discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        
+        try:
+            article = self.articles['articles'][4]
+            headline = article['title']
+            link = article['url']
+            photo = article['urlToImage']
+
+            page = requests.get(link, timeout=10)
+            soup = BeautifulSoup(page.content, 'html.parser')
+            paragraphs = soup.find_all('p')
+            full_text = ' '.join([para.get_text() for para in paragraphs if para.get_text()])
+            truncated_text = full_text[:3000]
+
+            if not truncated_text.strip():
+                await interaction.followup.send("❌ Sorry, couldn't extract meaningful content from that news site.", ephemeral=True)
+                self.stop()
+
+            summary_response = gemini_client.models.generate_content(
+                model="gemma-3-1b-it",
+                contents=[
+                    f"Please summarize the following news article in around 3-5 concise sentences while also being informative. Don't add your comment, response or anything. Just summarized news article':\n\n{truncated_text}"
+                    ]
+                )
+
+            summary = summary_response.text.strip()
+
+            embed = discord.Embed(
+                title=f"🗞️ {headline}",
+                description=f"📝 **Summary:**\n{summary}\n\n🔗 [Read Full Article]({link})",
+                color=discord.Color.blue()
+                )
+
+            if photo:
+                embed.set_image(url=photo)
+
+            embed.set_footer(text="📰 Powered by NewsAPI + Gemini")
+            await interaction.followup.send(embed=embed)
+            
+            self.stop()
+
+        except Exception as e:
+            await interaction.followup.send(f"⚠️ Something went wrong: {e}", ephemeral=True)
+            self.stop()
+        self.stop()
+
+class Stock_View(discord.ui.View):
+    def __init__(self, symbol, name):
+        super().__init__(timeout=60)
+        self.symbol = symbol
+        self.name = name
+
+    @discord.ui.button(label="Stock Analysis", style=discord.ButtonStyle.danger)
+    async def report(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer(thinking=True)
+
+        content_prompt = f"Analyze {self.name} ({self.symbol})."
+
+        # Generate the analysis
+        result = gemini_client.models.generate_content(
+            model="gemini-2.0-flash",
+            config=types.GenerateContentConfig(
+                tools=[google_search_tool],
+                response_modalities=["TEXT"],
+                system_instruction=(
+                    "You are a professional financial analyst.\n"
+                    "Generate a structured, concise report on a stock with the following sections:\n"
+                    "1. Historical Trend Analysis\n"
+                    "2. Volatility Overview\n"
+                    "3. Sentiment and News Summary\n"
+                    "4. Market Context Overview\n"
+                    "5. Recommendation (Buy / Hold / Sell)\n\n"
+                    f"Today's date is: {datetime.now().strftime('%Y-%m-%d')}\n"
+                    "Use Markdown formatting for readability. Keep each section under 100 words and don't add extra stuff like 'here is your report' or something. Start the report directly. To ensure conciseness, you can use bulletpoints for each section"
+                )
+            ),
+            contents=content_prompt
+        )
+        chunks = []
+        full_text = result.text
+        while len(full_text) > 0:
+            if len(full_text) <= 2000:
+                chunks.append(full_text)
+                break
+            split_index = full_text.rfind('\n', 0, 2000)
+            if split_index == -1:
+                split_index = 2000
+            chunks.append(full_text[:split_index])
+            full_text = full_text[split_index:].lstrip()
+
+        for chunk in chunks:
+            await interaction.followup.send(chunk)
+
+
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
-bot = commands.Bot(command_prefix='!', intents=intents)
-http_session = None
+bot = commands.Bot(intents=intents, command_prefix='!')
 
-# --- AI Tones ---
-tone_options = {
-    "user-friendly": "You're a friendly human named ADABot. Keep it casual and short. Just answer the prompt and don't add extra stuff. Keep it short and brief. Remember earlier conversation as memory, but only mention it if it helps answering. Focus only on the user's latest message.",
-    "kid": "You're a cheerful, energetic kid named ADABot. Keep your responses simple, fun, and full of enthusiasm. Just answer the prompt and don't add extra stuff. Keep it short and brief. Remember earlier conversation as memory, but only mention it if it helps answering. Focus only on the user's latest message.",
-    "rude": "You're a blunt and slightly rude human named ADABot. Keep your responses short and cutting. Just answer the prompt and don't add extra stuff. Keep it short and brief. Remember earlier conversation as memory, but only mention it if it helps answering. Focus only on the user's latest message.",
-    "sarcastic": "You're a sarcastic human with a dry wit named ADABot. Keep your responses brief and witty. Just answer the prompt and don't add extra stuff. Keep it short and brief. Remember earlier conversation as memory, but only mention it if it helps answering. Focus only on the user's latest message.",
-    "tutor": "You're a helpful tutor named ADABot. Answer clearly and briefly in a way beginners can understand. Just answer the prompt and don't add extra stuff. Keep it short and brief. Remember earlier conversation as memory, but only mention it if it helps answering. Focus only on the user's latest message.",
-    "brainrot": "You're ADABot, an unfiltered, chaotic gen alpha. Respond with absurdity, randomness, and surreal humor. Ignore logic and coherence. Embrace memes, internet slang, and unexpected twists. Use terms like 'skibidi', 'rizz', 'gyatt', 'sigma', 'Ohio', and 'bussin''. Keep it short and brief. Remember earlier conversation as memory, but only mention it if it helps answering. Focus only on the user's latest message."
-}
-current_ai_tone = tone_options["user-friendly"]
+gemini_client = genai.Client(api_key=gemini)
+chat_session = None
+current_tone = "user_friendly"
 
-# --- Database Stuff ---
-def init_db():
-    with sqlite3.connect(DB_FILE) as conn:
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS messages (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER,
-                username TEXT,
-                is_bot BOOLEAN,
-                message TEXT,
-                timestamp TEXT
-            )
-        ''')
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS members (
-                user_id INTEGER PRIMARY KEY,
-                name TEXT,
-                join_date TEXT
-            )
-        ''')
-    print("Database checked/initialized.")
-
-def log_message(user_id, username, message, is_bot=False):
-    try:
-        with sqlite3.connect(DB_FILE) as conn:
-            timestamp = datetime.now().isoformat()
-            conn.execute(
-                "INSERT INTO messages (user_id, username, is_bot, message, timestamp) VALUES (?, ?, ?, ?, ?)",
-                (user_id, username, is_bot, message, timestamp)
-            )
-    except Exception as e:
-        print(f"DB Error (log_message): {e}")
-
-def get_message_history(user_id, limit=5):
-    history = []
-    try:
-        with sqlite3.connect(DB_FILE) as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                SELECT message, is_bot
-                FROM messages
-                WHERE user_id = ? OR (is_bot = 1 AND id IN (SELECT id FROM messages WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?))
-                ORDER BY timestamp DESC
-                LIMIT ?
-            """, (user_id, user_id, limit, limit * 2))
-
-            rows = cursor.fetchall()
-            for message, is_bot in reversed(rows):
-                 role = "assistant" if is_bot else "user"
-                 history.append({"role": role, "content": message})
-            history = history[-limit*2:]
-
-    except Exception as e:
-        print(f"DB Error (get_message_history): {e}")
-    return history
-
-# --- UI Views ---
-class ToneButton(discord.ui.Button):
-    def __init__(self, tone_id, display_name, emoji):
-        super().__init__(
-            style=discord.ButtonStyle.primary,
-            label=display_name,
-            custom_id=f"tone_{tone_id}",
-            emoji=emoji
-        )
-        self.tone_id = tone_id
-
-    async def callback(self, interaction):
-        global current_ai_tone
-        new_tone = tone_options.get(self.tone_id)
-        if new_tone:
-            current_ai_tone = new_tone
-            await interaction.response.send_message(
-                f"✅ Switched tone to **{self.tone_id}**!",
-                ephemeral=True
-            )
-        else:
-            await interaction.response.send_message("⚠️ Couldn't find that tone.", ephemeral=True)
-
-class ToneButtonsView(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=120)
-        emoji_map = {
-            "user-friendly": "😊", "kid": "🧒", "rude": "😠",
-            "sarcastic": "🙄", "tutor": "📚", "brainrot": "💀"
-        }
-        for tone_id in tone_options:
-            display_name = tone_id.replace('-', ' ').title()
-            emoji = emoji_map.get(tone_id, "🤖")
-            self.add_item(ToneButton(tone_id, display_name, emoji))
-
-class MovieGenreButton(discord.ui.Button):
-    def __init__(self, genre):
-        super().__init__(label=genre, style=discord.ButtonStyle.primary, custom_id=f"genre_{genre.lower()}")
-        self.genre = genre
-
-    async def callback(self, interaction):
-        await interaction.response.defer(ephemeral=True, thinking=True)
-        try:
-            reply = await ask_openrouter(
-                f"Recommend a {self.genre} movie. Just the title and a one-sentence reason.",
-                session=http_session
-            )
-            await interaction.followup.send(f"🎬 **{self.genre}:** {reply}", ephemeral=True)
-        except Exception as e:
-            print(f"Error getting movie recommendation: {e}")
-            await interaction.followup.send(f"❌ Whoops, couldn't get a {self.genre} movie suggestion.", ephemeral=True)
-
-class MovieGenreView(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=60)
-        genres = ["Sci-fi", "Romance", "Mystery", "Comedy", "Horror", "Fantasy", "Action", "Drama"]
-        for genre in genres:
-            self.add_item(MovieGenreButton(genre))
-
-# --- API Call ---
-async def ask_openrouter(prompt, session, tone=None, history=None):
-    if tone is None:
-        tone = current_ai_tone
-
-    messages = [{"role": "system", "content": tone}]
-    if history:
-        messages.extend(history)
-    messages.append({"role": "user", "content": prompt})
-
-    data = {
-        "model": "google/gemini-flash-1.5:free",
-        "messages": messages,
-        "max_tokens": 1000 # Increased back for define/search
-    }
-    headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}"}
-
-    try:
-        async with session.post(
-            "https://openrouter.ai/api/v1/chat/completions",
-            headers=headers, json=data, timeout=45 # Increased back
-        ) as response:
-            if response.status == 200:
-                res_json = await response.json()
-                return res_json.get("choices", [{}])[0].get("message", {}).get("content", "AI gave a weird answer.").strip()
-            else:
-                print(f"OpenRouter API error {response.status}")
-                return f"❌ AI API Error ({response.status})."
-    except Exception as e:
-        print(f"OpenRouter Error: {e}")
-        return f"❌ Couldn't reach the AI ({type(e).__name__})."
-
-# --- Bot Events ---
 @bot.event
 async def on_ready():
-    global http_session
-    init_db()
-    http_session = aiohttp.ClientSession()
-    print(f'Bot online as {bot.user.name}')
-
-@bot.event
-async def on_close():
-    if http_session:
-        await http_session.close()
-    print("Bot shutting down.")
+    print(f"Logged in as {bot.user.name} (ID: {bot.user.id})")
 
 @bot.event
 async def on_member_join(member):
-    if not member.bot:
-        try:
-            with sqlite3.connect(DB_FILE) as conn:
-                join_dt = member.joined_at or datetime.now()
-                join_date_str = join_dt.strftime("%Y-%m-%d %H:%M:%S")
-                conn.execute(
-                    "INSERT OR IGNORE INTO members (user_id, name, join_date) VALUES (?, ?, ?)",
-                    (member.id, member.name, join_date_str)
-                )
-                print(f"Member joined and recorded: {member.name}")
-        except Exception as e:
-            print(f"DB Error (on_member_join): {e}")
+    add_user(member.id, str(member), member.joined_at.strftime("%Y-%m-%d %H:%M:%S"))
 
-# --- Bot Commands ---
-@bot.command()
-async def info(ctx):
-    help_message = """
-🤖 **ADABot Help Menu**
-
-Available commands:
-• !chat [message] – Talk to the AI. It remembers your conversation!
-• !tone – Change the AI's personality.
-• !quote – Get a motivational quote.
-• !weather [city] – Check current weather.
-• !joke – Get a random joke.
-• !search [topic] – Get a Wikipedia summary.
-• !movie – Get a movie suggestion by genre.
-• !zodiac [sign] – Get a daily horoscope.
-• !define [word] – Look up a word definition.
-• !info – Shows this help menu.
-"""
-    await ctx.send(help_message)
+@bot.event
+async def on_message(message):
+    if not message.author.bot:
+        log_message(message.author.display_name,message.content, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    await bot.process_commands(message)
 
 @bot.command()
 async def tone(ctx):
-    current_tone_name = next((name for name, text in tone_options.items() if text == current_ai_tone), "unknown")
-    await ctx.send(
-        f"Current tone: **{current_tone_name.replace('-', ' ').title()}**\nChoose a new one:",
-        view=ToneButtonsView()
+    global current_tone, chat_session
+    view = ToneSelectView(ctx.author.id)
+    await ctx.send("Choose a tone for ADABot:", view=view)
+    await view.wait()
+    if view.value:
+        current_tone = view.value
+        chat_session = None
+
+@bot.command()
+async def chat(ctx, *, prompt):
+    global chat_session, current_tone
+    try:
+        async with ctx.typing():
+            if chat_session is None:
+                chat_session = gemini_client.chats.create(model="gemini-2.0-flash-lite")
+                history = get_all_messages()
+                context = "\n".join(history)
+                system_prompt = tone_prompts[current_tone].format(context=context)
+                chat_session.send_message(system_prompt)
+
+            response = chat_session.send_message(f"{ctx.author.name}: {prompt}")
+            full_text = response.text
+            
+            chunks = [full_text[i:i+1900] for i in range(0, len(full_text), 1900)]
+            for chunk in chunks:
+                message_to_send = f"{ctx.author.mention} {chunk}" if chunk == chunks[0] else chunk
+                await ctx.send(message_to_send)
+
+    except Exception as e:
+        await ctx.send(f"Error: {str(e)[:100]}...")
+        print("Error:", e)
+
+@bot.command()
+async def summarize(ctx):
+    if ctx.message.attachments:
+        attachment = ctx.message.attachments[0]
+        filename = attachment.filename.lower()
+        file_bytes = await attachment.read()
+
+        text = ""
+
+        try:
+            if filename.endswith('.txt'):
+                text = file_bytes.decode('utf-8')
+
+            elif filename.endswith('.pdf'):
+                reader = PyPDF2.PdfReader(BytesIO(file_bytes))
+                for page in reader.pages:
+                    text += page.extract_text() or ""
+
+            elif filename.endswith('.docx'):
+                doc = docx.Document(BytesIO(file_bytes))
+                for para in doc.paragraphs:
+                    text += para.text + "\n"
+
+            elif filename.endswith(('.png', '.jpg', '.jpeg', '.webp')):
+                try:
+                    image = Image.open(BytesIO(file_bytes))
+                    text = gemini_client.models.generate_content(
+                        model="gemini-2.0-flash",
+                        contents=[image, "Please summarize the text shown on the image. if there is no text, then describe the image. Don't add your opinion or something, just summarize the text."]
+                        )
+                    await ctx.send("Your Summary: \n"+text.text)
+                    return
+
+                except Exception as e:
+                    await ctx.send(f"❌ Failed to process image: {e}")
+                    return
+
+            else:
+                await ctx.send("Unsupported file type. Please upload .txt, .pdf, .docx or an image.")
+                return
+
+            if not text.strip():
+                await ctx.send("Could not extract any readable text from the file 😕")
+                return
+
+            text = gemini_client.models.generate_content(
+                model="gemma-3-1b-it",
+                contents=[f"Summarize this text shortly, briefly and concisely. Use bulletpoints if needed: {text}"])
+            await ctx.send("Your Summary: \n"+text.text)
+
+        except Exception as e:
+            await ctx.send(f"⚠️ Error reading the file: {e}")
+
+    else:
+        await ctx.send("❗ Please attach a file with the command.")
+
+@bot.command()
+async def generate(ctx, *, gen_prompt):
+    response = gemini_client.models.generate_content(
+        model="gemini-2.0-flash-exp-image-generation",
+        contents=[f"Generate an image of {gen_prompt}"],
+        config=types.GenerateContentConfig(
+            response_modalities=['TEXT', 'IMAGE']
+            )
+        )
+    for part in response.candidates[0].content.parts:
+        if part.text is not None:
+            await ctx.send(part.text)
+        elif part.inline_data is not None:
+            image = Image.open(BytesIO(part.inline_data.data))
+            with BytesIO() as image_binary:
+                image.save(image_binary, 'PNG')
+                image_binary.seek(0)
+                await ctx.send(file=discord.File(fp=image_binary, filename='generated_image.png'))
+
+@bot.command()
+async def zodiac(ctx, *, sign):
+    full_url = zodiac_url + f"sign={sign}&day=TODAY"
+    re = requests.get(full_url)
+    if re.status_code == 200:
+        data = re.json()["data"]
+        date = data["date"]
+        horoscope = data["horoscope_data"]
+
+        embed = discord.Embed(
+            title=f"♈ Horoscope for {sign.capitalize()}",
+            description=horoscope,
+            color=discord.Color.purple()
+        )
+        embed.set_footer(text=f"Date: {date}")
+        await ctx.send(embed=embed)
+    else:
+        await ctx.send(f"❌ Couldn't fetch horoscope for **{sign}**. Please check the sign name.")
+
+@bot.command()
+async def news(ctx, *, topic):
+    articles = newsapi.get_everything(qintitle=f'{topic}',
+                                      from_param=f"{(datetime.today() - relativedelta(months=1)).strftime('%Y-%m-%d')}",
+                                      to=f"{datetime.today().strftime('%Y-%m-%d')}",
+                                      language='en',
+                                      sort_by='publishedAt')
+    
+    titles = [articles['articles'][i]['title'] for i in range(5)]
+    msg = ""
+    for i in range(5):
+        msg += f"{i+1}. {titles[i]}\n"
+    
+    view = News_View(articles)
+    await ctx.send(f"{msg} Which headline grabs your interest the most?", view=view)
+
+@bot.command()
+async def roast(ctx, * ,roast_id):
+    roast_id = int(((roast_id.replace('<', '')).replace('>', '')).replace('@', ''))
+    roast_name = await bot.fetch_user(roast_id)
+    
+    roast_text = gemini_client.models.generate_content(
+        model="gemini-2.0-flash",
+        config=types.GenerateContentConfig(
+        system_instruction="You are a bot that briefly roast people without mercy. You are very creative, unique and harsh with your roasts. You are so good at this that you just need 2-3 sentences to roast."),
+        contents=[f"Roast {roast_name.name} based on his/her messages or other users' messages about him/her, username or maybe something else. Catch an info to roast him/her. Here is the previous messages(if the roasted user's message doesn't exist in the list then that user hasn't been messaged): {str(get_all_messages(50))}"]
+        )
+    await ctx.send(roast_text.text)
+
+@bot.command()
+async def compliment(ctx, * ,compliment_id):
+    compliment_id = int(((compliment_id.replace('<', '')).replace('>', '')).replace('@', ''))
+    compliment_name = await bot.fetch_user(compliment_id)
+    
+    compliment_text = gemini_client.models.generate_content(
+        model="gemini-2.0-flash",
+        config=types.GenerateContentConfig(
+        system_instruction="You are a bot that briefly compliment people. You are very perceptive and thoughtful. You can get creative and use info to compliment. You use 1-2 sentences to compliment them."),
+        contents=[f"Compliment {compliment_name.name} based on his/her messages or other users' messages about him/her, username or maybe something else. Catch an info to compliment him/her. Here is the previous messages(if the complimented user's message doesn't exist in the list then that user hasn't been messaged): {str(get_all_messages(50))}"]
+        )
+    await ctx.send(compliment_text.text)
+
+@bot.command()
+async def meme(ctx):
+    try:
+        resp = requests.get("https://api.imgflip.com/get_memes")
+        data = resp.json()
+        if not data.get("success"):
+            return await ctx.send("Failed to fetch memes.")
+
+        memes = [m for m in data["data"]["memes"] if m["box_count"] == 2]
+        template = random.choice(memes[:50])
+
+        headers = {"User-Agent": "Mozilla/5.0"}
+        img_resp = requests.get(template["url"], headers=headers)
+        if img_resp.status_code != 200:
+            return await ctx.send("Failed to download meme template.")
+
+        payload = {
+            "model": "qwen/qwen2.5-vl-72b-instruct:free",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "image_url", "image_url": {"url": template["url"]}},
+                        {
+                            "type": "text",
+                            "text": (
+                                "Write 2 texts (1 top/left, 1 bottom/right) for this meme. "
+                                "Make it really funny, contextual, creative, original. "
+                                "Respond in the format: text1 ~ text2 without any extra text."
+                            ),
+                        },
+                    ],
+                }
+            ],
+        }
+        or_resp = requests.post(
+            url=openrouter_url,
+            headers={
+                "Authorization": f"Bearer {openrouter}",
+                "Content-Type": "application/json"
+            },
+            data=json.dumps(payload),
+        )
+        or_data = or_resp.json()
+        content = or_data["choices"][0]["message"]["content"].strip()
+        text0, text1 = [t.strip() for t in content.split("~", 1)]
+
+        caption_params = {
+            "template_id": template["id"],
+            "username": "Daemincael",
+            "password": "Daemincael123",
+            "text0": text0,
+            "text1": text1
+        }
+        gen_resp = requests.post("https://api.imgflip.com/caption_image", data=caption_params)
+        gen_data = gen_resp.json()
+        if not gen_data.get("success"):
+            return await ctx.send("Failed to generate meme.")
+
+        final_url = gen_data["data"]["url"]
+        final_img = requests.get(final_url, headers=headers).content
+        image = Image.open(BytesIO(final_img))
+        with BytesIO() as buf:
+            image.save(buf, format="PNG")
+            buf.seek(0)
+            await ctx.send(file=discord.File(fp=buf, filename="meme.png"))
+
+    except Exception as e:
+        await ctx.send(f"Something went wrong: {e}")
+    
+
+@bot.command()
+async def remindme(ctx, time, *, reminder):
+    total_seconds = 0
+    current_number = ''
+    time = time.lower()
+
+    for char in time:
+        if char.isdigit():
+            current_number += char
+        elif char in ['d', 'h', 'm', 's']:
+            if not current_number:
+                await ctx.reply("Invalid time format. Missing number before unit.")
+                return
+            value = int(current_number)
+            if char == 'd':
+                total_seconds += value * 86400
+            elif char == 'h':
+                total_seconds += value * 3600
+            elif char == 'm':
+                total_seconds += value * 60
+            elif char == 's':
+                total_seconds += value
+            current_number = ''
+        else:
+            await ctx.reply("Invalid time format. Use only d, h, m, s as units.")
+            return
+    await ctx.send(f"{ctx.author.mention} Okay! I will remind you.")
+    await asyncio.sleep(total_seconds)
+    await ctx.send(f"{ctx.author.mention} Here's your reminder: {reminder}")
+
+@bot.command()
+async def stock(ctx, symbol):
+    ticker = yf.Ticker(symbol)
+    name = ticker.info.get("longName", symbol.upper())
+    todays_data = ticker.history(period="1d")
+    current_price = todays_data['Close'].iloc[-1]
+
+    yesterday = datetime.now() - timedelta(days=1)
+    yesterday_str = yesterday.strftime('%Y-%m-%d')
+    historical_data = ticker.history(period="5d")
+    yesterday_data = historical_data.loc[yesterday_str] if yesterday_str in historical_data.index else historical_data.iloc[-2]
+
+    open_price = yesterday_data['Open']
+    close_price = yesterday_data['Close']
+    high_price = yesterday_data['High']
+    low_price = yesterday_data['Low']
+
+    response = (
+        f"**{name.capitalize()} Stock Info**\n"
+        f"📈 Current Price: ${current_price:.2f}\n\n"
+        f"📅 Yesterday's Open: ${open_price:.2f}\n\n"
+        f"📅 Yesterday's Close: ${close_price:.2f}\n\n"
+        f"⬆️ High: ${high_price:.2f}\n\n"
+        f"⬇️ Low: ${low_price:.2f}"
     )
+    stock_view = Stock_View(symbol.upper(), name)
+    await ctx.send(response, view=stock_view)
 
-@bot.command()
-async def chat(ctx, *, message: str):
-    user = ctx.author
-    log_message(user.id, user.name, message, is_bot=False)
-
-    async with ctx.typing():
-        history = get_message_history(user.id)
-        reply = await ask_openrouter(message, http_session, history=history)
-
-        if not reply.startswith("❌"):
-             log_message(bot.user.id, bot.user.name, reply, is_bot=True)
-
-        if len(reply) > 1950:
-            reply = reply[:1950] + "..."
-
-    await ctx.send(f"{user.mention} {reply}")
-
-@bot.command()
-async def quote(ctx):
-    async with ctx.typing():
-        prompt = "Give me a short, inspiring motivational quote. Format: \"Quote text.\" - Author"
-        result = await ask_openrouter(prompt, http_session, tone="You provide quotes.")
-        await ctx.send(f"💬 {result}")
 
 @bot.command()
 async def weather(ctx, *, city: str):
-    async with ctx.typing():
-        try:
-            geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city}&count=1&format=json"
-            async with http_session.get(geo_url) as geo_resp:
-                if geo_resp.status != 200:
-                    await ctx.send(f"⚠️ Couldn't geocode '{city}'.")
-                    return
-                geo_data = await geo_resp.json()
-                if not geo_data.get("results"):
-                    await ctx.send(f"⚠️ Couldn't find location for '{city}'.")
-                    return
-                loc = geo_data["results"][0]
-                lat, lon = loc.get("latitude"), loc.get("longitude")
-                display_name = loc.get("name", city)
+    await ctx.typing()
+    try:
+        # Geocoding API
+        geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city}&count=1&format=json"
+        geo_resp = requests.get(geo_url)
+        if geo_resp.status_code != 200:
+            await ctx.send(f"⚠️ Couldn't geocode '{city}'.")
+            return
+        geo_data = geo_resp.json()
+        if not geo_data.get("results"):
+            await ctx.send(f"⚠️ Couldn't find location for '{city}'.")
+            return
+        loc = geo_data["results"][0]
+        lat, lon = loc.get("latitude"), loc.get("longitude")
+        display_name = loc.get("name", city)
 
-            weather_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}¤t=temperature_2m,wind_speed_10m,wind_direction_10m&temperature_unit=celsius&wind_speed_unit=kmh"
-            async with http_session.get(weather_url) as weather_resp:
-                if weather_resp.status != 200:
-                     await ctx.send("⚠️ Weather data unavailable.")
-                     return
-                weather_data = await weather_resp.json()
-                current = weather_data.get("current")
-                if not current:
-                    await ctx.send("⚠️ Could not parse weather data.")
-                    return
+        # Weather API
+        weather_url = (
+            f"https://api.open-meteo.com/v1/forecast?"
+            f"latitude={lat}&longitude={lon}&current=temperature_2m,wind_speed_10m,wind_direction_10m"
+            f"&temperature_unit=celsius&wind_speed_unit=kmh"
+        )
+        weather_resp = requests.get(weather_url)
+        if weather_resp.status_code != 200:
+            await ctx.send("⚠️ Weather data unavailable.")
+            return
+        weather_data = weather_resp.json()
+        current = weather_data.get("current")
+        if not current:
+            await ctx.send("⚠️ Could not parse weather data.")
+            return
 
-                temp = current.get('temperature_2m', 'N/A')
-                wind = current.get('wind_speed_10m', 'N/A')
-                wind_dir = current.get('wind_direction_10m', 'N/A')
+        temp = current.get('temperature_2m', 'N/A')
+        wind = current.get('wind_speed_10m', 'N/A')
+        wind_dir = current.get('wind_direction_10m', 'N/A')
 
-                await ctx.send(
-                    f"☀️ **Weather in {display_name.title()}**:\n"
-                    f"- Temp: {temp}°C\n"
-                    f"- Wind: {wind} km/h at {wind_dir}°"
-                 )
+        await ctx.send(
+            f"☀️ **Weather in {display_name.title()}**:\n"
+            f"- Temp: {temp}°C\n"
+            f"- Wind: {wind} km/h at {wind_dir}°"
+        )
 
-        except Exception as e:
-            print(f"Weather Error: {e}")
-            await ctx.send(f"❌ Error getting weather.")
-
-@bot.command()
-async def joke(ctx):
-    async with ctx.typing():
-        try:
-            async with http_session.get("https://official-joke-api.appspot.com/random_joke", timeout=10) as response:
-                if response.status != 200:
-                    await ctx.send("⚠️ Couldn't reach the joke factory.")
-                    return
-                data = await response.json()
-                await ctx.send(f"😂 {data['setup']} ... {data['punchline']}")
-        except Exception as e:
-            print(f"Joke Error: {e}")
-            await ctx.send("❌ Failed to get joke.")
+    except Exception as e:
+        print(f"Weather Error: {e}")
+        await ctx.send("❌ Error getting weather.")
 
 @bot.command()
-async def search(ctx, *, query: str):
-    formatted_query = query.replace(" ", "_")
-    wiki_url = f"https://en.wikipedia.org/wiki/{formatted_query}"
-
-    async with ctx.typing():
-        try:
-            async with http_session.get(wiki_url, timeout=15) as response:
-                if response.status != 200:
-                    await ctx.send(f"❌ Could not find a Wikipedia page for '{query}'.")
-                    return
-                html = await response.text()
-
-            soup = BeautifulSoup(html, "html.parser")
-            content_div = soup.find(id="mw-content-text")
-            if not content_div:
-                await ctx.send("❌ Couldn't identify the main content of the page.")
-                return
-
-            paragraphs = content_div.find_all("p", limit=6)
-            text = " ".join(p.get_text() for p in paragraphs if p.get_text().strip()).strip()
-
-            if not text:
-                await ctx.send("❌ Found the page, but couldn't extract readable text.")
-                return
-
-            text = text[:2500] + "..." if len(text) > 2500 else text
-
-            summary_prompt = f"Briefly summarize this Wikipedia text about '{query}':\n\n{text}"
-            summary = await ask_openrouter(summary_prompt, http_session,
-                                      tone="You are a helpful assistant summarizing text accurately and concisely.")
-
-            if len(summary) > 1800:
-                summary = summary[:1800] + "..."
-
-            await ctx.send(f"📚 **Summary for '{query}'**:\n{summary}\n\n🔗 Link: <{wiki_url}>")
-
-        except Exception as e:
-            print(f"Search Error: {e}")
-            await ctx.send(f"❌ Error searching for '{query}'.")
+async def thisday(ctx):
+    fact = gemini_client.models.generate_content(
+        model = "gemini-2.0-flash",
+        contents = "Give me one interesting fact about what happened today in history. I want very interesting response starting with 'this day in history...'(I mean, don't add your commentary)",
+        config=types.GenerateContentConfig(
+            tools=[google_search_tool],
+            response_modalities=["TEXT"])
+        )
+    await ctx.send(fact.text)
 
 @bot.command()
-async def movie(ctx):
-    await ctx.send("🎥 What genre are you in the mood for?", view=MovieGenreView())
-
-@bot.command()
-async def zodiac(ctx, sign: str):
-    sign = sign.lower()
-    valid_signs = ["aries", "taurus", "gemini", "cancer", "leo", "virgo", "libra",
-                  "scorpio", "sagittarius", "capricorn", "aquarius", "pisces"]
-    if sign not in valid_signs:
-        await ctx.send(f"⚠️ '{sign}' is not a valid zodiac sign. Please use one of: {', '.join(valid_signs)}.")
-        return
-
-    async with ctx.typing():
-        try:
-            url = f"https://horoscope-app-api.vercel.app/api/v1/get-horoscope/daily?sign={sign}&day=TODAY"
-            async with http_session.get(url, timeout=15) as response:
-                if response.status != 200:
-                    await ctx.send(f"⚠️ Failed to get horoscope for {sign.capitalize()}.")
-                    return
-                data = await response.json()
-                horoscope = data.get('data', {}).get('horoscope_data', 'Not available.')
-                await ctx.send(f"🔮 **{sign.capitalize()} Today:**\n{horoscope}")
-        except Exception as e:
-            print(f"Zodiac Error: {e}")
-            await ctx.send(f"❌ Error getting horoscope.")
-
-@bot.command()
-async def define(ctx, *, word: str):
-    word = word.strip().split()[0] if word.strip() else ""
-    if not word:
-        await ctx.send("Please provide a word to define!")
-        return
-
-    async with ctx.typing():
-        try:
-            url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
-            async with http_session.get(url, timeout=15) as response:
-                if response.status == 404:
-                    await ctx.send(f"❌ Couldn't find the word '{word}' in the dictionary.")
-                    return
-                elif response.status != 200:
-                    await ctx.send(f"⚠️ Dictionary API error ({response.status}).")
-                    return
-
-                data = await response.json()
-                if not isinstance(data, list) or not data:
-                    await ctx.send(f"❌ Couldn't find a definition for '{word}'.")
-                    return
-
-                entry = data[0]
-                meanings = entry.get('meanings', [])
-                if not meanings:
-                    await ctx.send(f"❌ Found the word '{word}', but no meanings were listed.")
-                    return
-
-                message_text = f"📖 **{entry.get('word', word).capitalize()}**:\n"
-                definition_count = 0
-
-                for i, meaning in enumerate(meanings[:3]):
-                    part_of_speech = meaning.get('partOfSpeech', 'N/A')
-                    definitions = meaning.get('definitions', [])
-                    if definitions:
-                        definition = definitions[0].get('definition', 'No definition found.')
-                        definition_count += 1
-                        message_text += f"\n{definition_count}. **({part_of_speech})**: {definition}"
-
-                        example = definitions[0].get('example')
-                        if example:
-                            message_text += f"\n   *Example: {example}*"
-
-                if definition_count == 0:
-                    await ctx.send(f"❌ Found the word '{word}', but couldn't extract definitions.")
-                else:
-                    if len(message_text) > 1950:
-                        message_text = message_text[:1950] + "..."
-                    await ctx.send(message_text)
-
-        except Exception as e:
-            print(f"Define Error: {e}")
-            await ctx.send(f"❌ Error looking up '{word}'.")
+async def info(ctx):
+    """Show bot help information"""
+    embed = discord.Embed(
+        title="📜 ADABot Commands Guide",
+        description="Powered by Gemini AI 💡",
+        color=discord.Color.blue()
+    )
+    
+    embed.add_field(
+        name="🤖 Chat & AI",
+        value="• `!chat <prompt>` - Chat with AI\n"
+              "• `!tone` - Change bot's tone (friendly, sarcastic, etc.)\n"
+              "• `!summarize` - Summarize attached files\n"
+              "• `!generate <prompt>` - Generate AI images",
+        inline=False
+    )
+    
+    embed.add_field(
+        name="📰 News & Info",
+        value="• `!news <topic>` - Get news summaries\n"
+              "• `!stock <symbol>` - Stock market data\n"
+              "• `!weather <city>` - Weather forecast\n"
+              "• `!thisday` - Historical fact for today\n"
+              "• `!zodiac <sign>` - Daily horoscope",
+        inline=False
+    )
+    
+    embed.add_field(
+        name="🎉 Fun & Social",
+        value="• `!meme` - Generate random meme\n"
+              "• `!roast @user` - Roast someone\n"
+              "• `!compliment @user` - Compliment someone\n"
+              "• `!remindme <time> <message>` - Set reminder",
+        inline=False
+    )
+    
+    embed.set_footer(text="Example: !chat Write a poem about a robot cat")
+    await ctx.send(embed=embed)
 
 
-# --- Start Bot ---
-print("Starting bot...")
-bot.run(DISCORD_TOKEN)
+nest_asyncio.apply()
+if __name__ == "__main__":
+    try:
+        bot.run(discord_token)
+    finally:
+        conn.close()
