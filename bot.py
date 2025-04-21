@@ -21,24 +21,26 @@ import asyncio
 import random
 import yfinance as yf
 
-
+# --- API Keys & Configuration ---
 discord_token = "YOUR_DISCORD_TOKEN"
 gemini = "YOUR_GEMINI_API_KEY"
 news_api = "YOUR_NEWS_API_KEY"
 newsapi = NewsApiClient(api_key=f'{news_api}')
 openrouter = "YOUR_OPENROUTER_API_KEY"
 
+# --- Google Search Tool for Gemini ---
 google_search_tool = Tool(
     google_search = GoogleSearch()
 )
 
-
+# --- API URLs ---
 zodiac_url = "https://horoscope-app-api.vercel.app/api/v1/get-horoscope/daily?"
 news_url = "https://newsapi.org/v2/everything?"
 openrouter_url = "https://openrouter.ai/api/v1/chat/completions"
 
 translation_active = False
 
+# --- Tone System Prompts for AI ---
 tone_prompts = {
     "user_friendly": "You are ADABot, a friendly and helpful Discord assistant. You respond in a concise and conversational manner. Here is some recent chat history for context (only use if relevant):\n{context}",
     "sarcastic": "You are ADABot, a sarcastic and snarky Discord assistant. You respond with dry humor, witty comebacks, and a hint of passive-aggressiveness. Keep replies short, clever, and just slightly exasperated. Here is some recent chat history for context (only use if relevant):\n{context}",
@@ -48,12 +50,14 @@ tone_prompts = {
     "brainrot": "You are ADABot, a hyper-online Gen Alpha Discord assistant. You communicate using chaotic Gen Alpha slang, including terms like 'skibidi', 'Ohio', 'rizz', 'gyatt', 'fanum tax', 'sigma', and 'delulu'. Your responses are short, unhinged, and filled with emojis, caps, and irony 💀🔥📱. Here is some recent chat history for context (only use if relevant):\n{context}"
 }
 
+# --- Database Setup ---
 conn = sqlite3.connect("DataBase.db")
 cursor = conn.cursor()
 cursor.execute("CREATE TABLE IF NOT EXISTS users (user_id INTEGER PRIMARY KEY, username TEXT, join_date TEXT)")
 cursor.execute("CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, message TEXT, timestamp TEXT)")
 conn.commit()
 
+# --- Database Functions ---
 def add_user(user_id, username, join_date):
     cursor.execute("INSERT OR IGNORE INTO users (user_id, username, join_date) VALUES (?, ?, ?)", (user_id, username, join_date))
     conn.commit()
@@ -68,6 +72,9 @@ def get_all_messages(limit=20):
     rows.reverse()
     return [f"{username}: {message}" for username, message in rows]
 
+# --- UI Views ---
+
+# Tone Selection View
 class ToneSelectView(discord.ui.View):
     def __init__(self, author_id):
         super().__init__(timeout=60)
@@ -110,6 +117,7 @@ class ToneSelectView(discord.ui.View):
         await interaction.response.send_message("Tone set to BrainRot 💀", ephemeral=True)
         self.stop()
 
+# News Article Selection View
 class News_View(discord.ui.View):
     def __init__(self, articles, num):
         super().__init__(timeout=60)
@@ -179,6 +187,7 @@ class News_View(discord.ui.View):
                 await interaction.followup.send(f"⚠️ Something went wrong: {e}", ephemeral=True)
                 self.view.stop()
 
+# Stock Analysis Button View
 class Stock_View(discord.ui.View):
     def __init__(self, symbol, name):
         super().__init__(timeout=60)
@@ -225,11 +234,13 @@ class Stock_View(discord.ui.View):
         for chunk in chunks:
             await interaction.followup.send(chunk)
 
+# Poll View with Dropdown
 class PollView(View):
     def __init__(self, options, question):
         super().__init__()
         self.add_item(PollDropdown(options, question))
 
+# Poll Dropdown Menu
 class PollDropdown(Select):
     def __init__(self, options, question):
         self.votes = {}
@@ -251,15 +262,18 @@ class PollDropdown(Select):
             ephemeral=True
         )
 
+# --- Bot Setup ---
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 bot = commands.Bot(intents=intents, command_prefix='!')
 
+# --- Gemini Client & Chat State ---
 gemini_client = genai.Client(api_key=gemini)
 chat_session = None
 current_tone = "user_friendly"
 
+# --- Bot Events ---
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user.name} (ID: {bot.user.id})")
@@ -289,6 +303,7 @@ async def on_message(message):
         if 'None' != translated:
           await message.reply(f"🔄 {message.author.mention} {translated}")
 
+# --- Bot Commands ---
 @bot.command()
 async def tone(ctx):
     global current_tone, chat_session
@@ -754,7 +769,9 @@ async def info(ctx):
     await ctx.send(embed=embed)
 
 
-nest_asyncio.apply()
+# --- Main Execution ---
+
+nest_asyncio.apply() # Apply this for running discord.py within environments like Jupyter/Spyder
 if __name__ == "__main__":
     try:
         bot.run(discord_token)
