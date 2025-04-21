@@ -20,7 +20,6 @@ from google.genai.types import Tool, GenerateContentConfig, GoogleSearch
 import asyncio
 import random
 import yfinance as yf
-from googletrans import Translator
 
 
 discord_token = "YOUR_DISCORD_TOKEN"
@@ -256,7 +255,6 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 bot = commands.Bot(intents=intents, command_prefix='!')
-translator = Translator()
 
 gemini_client = genai.Client(api_key=gemini)
 chat_session = None
