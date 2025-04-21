@@ -1,135 +1,156 @@
-## ADABot - Gemini & Multi-API Powered Discord Bot
+# ADABot - Gemini & Multi-API Powered Discord Bot
 
-ADABot is an advanced Discord bot powered by Google's Gemini AI, offering a suite of features from conversational AI to file summarization, AI image generation, news updates, stock analysis, and fun social interactions. Built with Python and SQLite for context-aware responses, ADABot brings powerful AI capabilities directly into your Discord server.
+ADABot is an advanced Discord bot powered by Google's Gemini AI, offering a suite of features from conversational AI with selectable personalities to file/URL summarization, AI image generation, news updates, stock analysis, weather forecasts, translation, polls, and fun social interactions like reminders, roasts, compliments, and memes. Built with Python, discord.py, and SQLite for context-aware responses, ADABot brings powerful AI and utility capabilities directly into your Discord server.
 
 ---
 
 ## ✨ Key Features
 
-- **🤖 Conversational AI**: Engage with Gemini AI using `!chat <prompt>`, and personalize responses by selecting different personalities with `!tone`.
-- **📄 File Summarization**: Summarize text from `.txt`, `.pdf`, `.docx`, or even text within images using `!summarize` (attach your file or image).
-- **🎨 AI Image Generation**: Generate custom images from text prompts with `!generate <prompt>`.
-- **📰 News & Information**:
-  - `!news <topic>`: Fetch and summarize the latest headlines on any topic.
-  - `!stock <symbol>`: Retrieve real-time and historical stock data, with optional AI-driven financial analysis.
-  - `!weather <city>`: Get current weather conditions and forecasts.
-  - `!zodiac <sign>`: Receive daily horoscopes for all zodiac signs.
-  - `!thisday`: Discover historical facts relevant to today's date.
-- **🎉 Fun & Social**:
-  - `!meme`: Generate AI-powered memes.
-  - `!roast @user` / `!compliment @user`: Playfully roast or compliment members using context from recent chats.
-  - `!remindme <time> <message>`: Set personal reminders (supports d/h/m/s notation, e.g., `2h30m`).
-- **🧠 Contextual Memory**: Maintains recent conversation history and user join data via SQLite for richer, context-aware interactions.
+-   **🤖 Conversational AI**:
+    -   `!chat <prompt>`: Engage with Gemini AI, using recent chat history for context.
+    -   `!tone`: Select a distinct personality for the AI (User-Friendly, Sarcastic, Depressed, Kid, Tutor, BrainRot).
+-   **📄 Summarization**:
+    -   `!summarize` (with file attachment): Summarize text from `.txt`, `.pdf`, `.docx`, or even text within images (`.png`, `.jpg`, etc.).
+    -   `!summarize <url>`: Summarize the content of a given webpage.
+-   **🎨 AI Image Generation**:
+    -   `!generate <prompt>`: Create unique images based on your text descriptions using Gemini's image generation capabilities.
+-   **📰 News & Information**:
+    -   `!news <topic>`: Fetch recent headlines and interactively get AI-generated summaries.
+    -   `!stock <symbol>`: Retrieve real-time and historical stock data, with an option for detailed AI-driven analysis.
+    -   `!weather <city>`: Get current weather conditions using Open-Meteo.
+    -   `!zodiac <sign>`: Receive daily horoscopes.
+    -   `!thisday`: Discover an interesting historical fact relevant to today's date using Gemini and Google Search.
+-   **🌐 Translation**:
+    -   `!translate <start/stop>`: Automatically translate non-English messages sent in the chat into English.
+-   **📊 Polls**:
+    -   `!poll "Question" "Option 1" "Option 2" ...`: Create interactive polls with multiple choices.
+-   **🎉 Fun & Social**:
+    -   `!meme`: Generate contextual memes using Imgflip templates and AI captioning via OpenRouter.
+    -   `!roast @user`: Playfully roast a member using context from recent chat history.
+    -   `!compliment @user`: Generate a thoughtful compliment for a member based on chat context.
+    -   `!remindme <time> <message>`: Set personal reminders (e.g., `!remindme 1d2h30m Check email`). Supports `d`, `h`, `m`, `s`.
+-   **🧠 Contextual Memory**:
+    -   Maintains recent conversation history (up to 20 messages by default) and user join data via an SQLite database (`DataBase.db`) for richer, context-aware AI interactions (chat, roast, compliment).
 
 ---
 
 ## ✅ Requirements
 
-- **Python**: 3.10 or higher
-- **Dependencies** (install via `pip`):
-  ```bash
-  pip install discord.py google-generativeai requests Pillow PyPDF2 python-docx nest_asyncio python-dateutil newsapi-python beautifulsoup4 yfinance
-  ```
+-   **Python**: 3.10 or higher recommended
+-   **Dependencies**: Install necessary libraries using pip.
+
+    ```bash
+    pip install discord.py google-generativeai google-generativeai[types] Pillow requests beautifulsoup4 PyPDF2 python-docx nest_asyncio python-dateutil newsapi-python yfinance
+    ```
+
+    Or use the `requirements.txt` file:
+    ```bash
+    pip install -r requirements.txt
+    ```
 
 ---
 
 ## ⚙️ Setup & Configuration
 
-1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/ValehK08/ADABot.git
-   cd ADABot
-   ```
-2. **Install Dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. **Configure API Keys**:
-   - Open `adabot.py` (or your script file).
-   - Replace placeholders with the actual keys:
-     ```python
-     discord_token = "YOUR_DISCORD_BOT_TOKEN"
-     gemini_api_key = "YOUR_GEMINI_API_KEY"
-     news_api_key = "YOUR_NEWS_API_KEY"
-     openrouter_api_key = "YOUR_OPENROUTER_API_KEY"
-     ```
+1.  **Clone the Repository** (if applicable) or save the script:
+    ```bash
+    # Example if using Git
+    git clone https://github.com/ValehK08/ADABot.git
+    cd ADABot
+    ```
+
+2.  **Install Dependencies**:
+    ```bash
+    pip install -r requirements.txt # If using requirements.txt
+    # Or use the single pip install command from the Requirements section
+    ```
+
+3.  **Configure API Keys**:
+    -   Open the Python script (`.py` file).
+    -   Locate the API key variables near the top and replace the placeholder strings with your actual keys:
+        ```python
+        discord_token = "YOUR_DISCORD_BOT_TOKEN"  # Get from Discord Developer Portal
+        gemini = "YOUR_GEMINI_API_KEY"          # Get from Google AI Studio
+        news_api = "YOUR_NEWS_API_KEY"          # Get from NewsAPI.org
+        openrouter = "YOUR_OPENROUTER_API_KEY"    # Get from OpenRouter.ai (used for !meme captioning)
+        ```
 
 ---
 
 ## ▶️ Running ADABot
 
-Start the bot with:
-```bash
-python bot.py  # or your script filename
-```
-On successful launch, the console will display a login confirmation.
-
----
+1.  Navigate to the directory containing the script in your terminal.
+2.  Run the bot using Python:
+    ```bash
+    python bot.py
+    ```
+3.  On successful launch, the console will display a message like: `Logged in as ADABot (ID: ADABotID)`. The bot should now be online in your Discord server.
 
 ---
 
 ## 📚 Command Reference
+
+*(Note: Default prefix is `!`)*
+
 ### 🧠 Chat & AI
-| Command                | Description                                           |
-|------------------------|-------------------------------------------------------|
-| `!chat <prompt>`       | Chat with Gemini AI using recent message history.     |
-| `!tone`                | Choose an AI personality/tone for `!chat`.            |
+| Command                       | Description                                                          |
+| :---------------------------- | :------------------------------------------------------------------- |
+| `!chat <prompt>`              | Chat with Gemini AI. Uses recent message history for context.        |
+| `!tone`                       | Opens a selection menu to choose the AI's personality/tone.          |
+| `!translate <start / stop>` | Starts or stops automatic translation of non-English messages.       |
 
-### 📝 Summarization
-| Command                         | Description                                                       |
-|----------------------------------|-------------------------------------------------------------------|
-| `!summarize` (+ attachment)     | Summarize `.txt`, `.pdf`, `.docx` files or text from images.     |
-
-### 🎨 Image Generation
-| Command                | Description                                           |
-|------------------------|-------------------------------------------------------|
-| `!generate <prompt>`   | Create AI-generated images based on your prompt.      |
+### 📝 Summarization & Generation
+| Command                       | Description                                                          |
+| :---------------------------- | :------------------------------------------------------------------- |
+| `!summarize` (+ attachment)   | Summarize `.txt`, `.pdf`, `.docx` files or text from images.         |
+| `!summarize <url>`            | Summarize the textual content of a webpage URL.                      |
+| `!generate <prompt>`          | Create an AI-generated image based on your prompt.                   |
 
 ### 🗞️ News & Info
-| Command                | Description                                           |
-|------------------------|-------------------------------------------------------|
-| `!news <topic>`        | Fetch top 5 headlines and AI summarize your choice.   |
-| `!stock <symbol>`      | Get current/historical stock data with AI analysis.   |
-| `!weather <city>`      | Display current weather conditions.                   |
-| `!thisday`             | Fun historical fact for today’s date.                 |
-| `!zodiac <sign>`       | Daily horoscope for any zodiac sign.                  |
+| Command                       | Description                                                          |
+| :---------------------------- | :------------------------------------------------------------------- |
+| `!news <topic>`               | Fetch top headlines and interactively request AI summaries.          |
+| `!stock <symbol>`             | Get current/historical stock data. Button for AI analysis report.    |
+| `!weather <city>`             | Display current weather conditions for the specified city.           |
+| `!thisday`                    | Get an interesting historical fact for today’s date.                 |
+| `!zodiac <sign>`              | Fetch the daily horoscope for any zodiac sign.                       |
 
 ### 😄 Fun & Social
-| Command                        | Description                                           |
-|--------------------------------|-------------------------------------------------------|
-| `!meme`                        | Generate a random AI-driven meme.                     |
-| `!roast @user`                 | Generate a playful roast for a user.                  |
-| `!compliment @user`            | Generate a thoughtful compliment for a user.          |
-| `!remindme <time> <message>`   | Schedule a personal reminder (d/h/m/s format).        |
+| Command                                   | Description                                                          |
+| :---------------------------------------- | :------------------------------------------------------------------- |
+| `!meme`                                   | Generate a random meme with AI-generated captions.                   |
+| `!roast @user`                            | Generate a playful roast targeting the mentioned user.               |
+| `!compliment @user`                       | Generate a thoughtful compliment for the mentioned user.             |
+| `!remindme <time_duration> <message>`     | Set a personal reminder (e.g., `1d2h30m`, `5m`). Units: d, h, m, s. |
+| `!poll "Question" "Opt1" "Opt2" ...`      | Create an interactive poll for users to vote on.                     |
 
 ### 🛠️ Utility
 | Command        | Description                   |
-|----------------|-------------------------------|
-| `!info`        | Display this help message.     |
+| :------------- | :---------------------------- |
+| `!info`        | Display the help message summarizing all commands. |
 
----
 ---
 
 ## 📦 APIs & Integrations
 
-- **Discord API** (`discord.py`)
-- **Google Gemini AI** (`google-generativeai`)
-- **NewsAPI** (`newsapi-python`)
-- **OpenRouter** (for meme caption generation)
-- **Imgflip** (meme templates & generation)
-- **Open-Meteo** (weather data)
-- **Horoscope API** (daily horoscopes)
-- **Yahoo Finance** (`yfinance`)
+ADABot leverages several external APIs and libraries:
+
+-   **Discord API** (`discord.py`): For all Discord bot interactions.
+-   **Google Gemini AI** (`google-generativeai`): Powers chat, summarization, image generation, analysis (stock, roast, compliment), translation, and historical facts. Includes Google Search Tool integration.
+-   **NewsAPI** (`newsapi-python`): Fetches news articles for the `!news` command.
+-   **OpenRouter** (`requests`): Used indirectly via HTTP requests for advanced AI model access (Qwen for `!meme` captioning).
+-   **Imgflip API** (`requests`): Provides meme templates and final meme generation for the `!meme` command.
+-   **Open-Meteo API** (`requests`): Supplies geocoding and weather data for the `!weather` command.
+-   **Horoscope API** (`requests` - via `zodiac_url`): Delivers daily horoscopes for the `!zodiac` command.
+-   **Yahoo Finance** (`yfinance`): Retrieves stock market data for the `!stock` command.
 
 ---
 
 ## 🗃️ Data Handling & Storage
 
-ADABot uses an SQLite database (`DataBase.db`) to persist user and message data:
+ADABot uses an SQLite database (`DataBase.db`) located in the same directory as the script to persist data:
 
-- **`users` table**: Tracks `user_id`, `username`, and `join_date`.
-- **`messages` table**: Logs `username`, `message`, and `timestamp` for context in AI interactions.
+-   **`users` table**: Stores `user_id` (Primary Key), `username`, and `join_date`. Used to track when users join.
+-   **`messages` table**: Logs `id` (Auto-incrementing Primary Key), `username`, `message` content, and `timestamp`. This history provides context for the `!chat`, `!roast`, and `!compliment` commands.
 
-Database is auto-created on first run if not present.
-
----
+The database file (`DataBase.db`) and tables are automatically created on the first run if they do not exist.
