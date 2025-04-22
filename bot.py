@@ -27,6 +27,8 @@ gemini = "YOUR_GEMINI_API_KEY"
 news_api = "YOUR_NEWS_API_KEY"
 newsapi = NewsApiClient(api_key=f'{news_api}')
 openrouter = "YOUR_OPENROUTER_API_KEY"
+IMGFlip_Username = "YOUR_IMGFLIP_USERNAME"
+IMGFlip_Password = "YOUR_IMGFLIP_PASSWORD"
 
 # --- Google Search Tool for Gemini ---
 google_search_tool = Tool(
@@ -568,8 +570,8 @@ async def meme(ctx):
 
         caption_params = {
             "template_id": template["id"],
-            "username": "Daemincael",
-            "password": "Daemincael123",
+            "username": f"{IMGFlip_Username}",
+            "password": f"{IMGFlip_Password}",
             "text0": text0,
             "text1": text1
         }
