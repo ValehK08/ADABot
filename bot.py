@@ -53,22 +53,32 @@ tone_prompts = {
 # --- Database Setup ---
 conn = sqlite3.connect("DataBase.db")
 cursor = conn.cursor()
+
+# User Database
 cursor.execute("CREATE TABLE IF NOT EXISTS users (user_id INTEGER PRIMARY KEY, username TEXT, join_date TEXT)")
+
+# Message Database
 cursor.execute("CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, message TEXT, timestamp TEXT)")
+
 conn.commit()
 
 # --- Database Functions ---
+
+# Add Joining Users To the Database
 def add_user(user_id, username, join_date):
     cursor.execute("INSERT OR IGNORE INTO users (user_id, username, join_date) VALUES (?, ?, ?)", (user_id, username, join_date))
     conn.commit()
 
+# Add Messages To the Database
 def log_message(username, message, timestamp):
     cursor.execute("INSERT INTO messages (username, message, timestamp) VALUES (?, ?, ?)", (username, message, timestamp))
     conn.commit()
 
+# Get Message History from the Database
 def get_all_messages(limit=20):
     cursor.execute("SELECT username, message FROM messages ORDER BY timestamp DESC LIMIT ?", (limit,))
     rows = cursor.fetchall()
+    # Reverse to get recent messages
     rows.reverse()
     return [f"{username}: {message}" for username, message in rows]
 
@@ -77,55 +87,44 @@ def get_all_messages(limit=20):
 # Tone Selection View
 class ToneSelectView(discord.ui.View):
     def __init__(self, author_id):
-        super().__init__(timeout=60)
+        super().__init__(timeout=60) # 60 second timeout
         self.author_id = author_id
         self.value = None
 
-    @discord.ui.button(label="User-Friendly 😊", style=discord.ButtonStyle.primary)
-    async def user_friendly(self, interaction: discord.Interaction, button: discord.ui.Button):
-        self.value = "user_friendly"
-        await interaction.response.send_message("Tone set to User-Friendly 😊", ephemeral=True)
-        self.stop()
+        # Tone Keys
+        tones = [
+            ("User‑Friendly 😊","user_friendly",discord.ButtonStyle.primary),
+            ("Sarcastic 😏","sarcastic",discord.ButtonStyle.secondary),
+            ("Depressed 😞","depressed",discord.ButtonStyle.secondary),
+            ("Kid 🧒","kid",discord.ButtonStyle.success),
+            ("Tutor 📚","tutor",discord.ButtonStyle.success),
+            ("BrainRot 💀", "brainrot", discord.ButtonStyle.danger)
+        ]
 
-    @discord.ui.button(label="Sarcastic 😏", style=discord.ButtonStyle.secondary)
-    async def sarcastic(self, interaction: discord.Interaction, button: discord.ui.Button):
-        self.value = "sarcastic"
-        await interaction.response.send_message("Tone set to Sarcastic 😏", ephemeral=True)
-        self.stop()
+        # Creating button for each tone in loop
+        for label, val, style in tones:
+            btn = discord.ui.Button(label=label, style=style, custom_id=val)
+            btn.callback = self._make_callback(label, val)
+            self.add_item(btn)
 
-    @discord.ui.button(label="Depressed 😞", style=discord.ButtonStyle.secondary)
-    async def depressed(self, interaction: discord.Interaction, button: discord.ui.Button):
-        self.value = "depressed"
-        await interaction.response.send_message("Tone set to Depressed 😞", ephemeral=True)
-        self.stop()
-
-    @discord.ui.button(label="Kid 🧒", style=discord.ButtonStyle.success)
-    async def kid(self, interaction: discord.Interaction, button: discord.ui.Button):
-        self.value = "kid"
-        await interaction.response.send_message("Tone set to Kid 🧒", ephemeral=True)
-        self.stop()
-
-    @discord.ui.button(label="Tutor 📚", style=discord.ButtonStyle.success)
-    async def tutor(self, interaction: discord.Interaction, button: discord.ui.Button):
-        self.value = "tutor"
-        await interaction.response.send_message("Tone set to Tutor 📚", ephemeral=True)
-        self.stop()
-
-    @discord.ui.button(label="BrainRot 💀", style=discord.ButtonStyle.danger)
-    async def brainrot(self, interaction: discord.Interaction, button: discord.ui.Button):
-        self.value = "brainrot"
-        await interaction.response.send_message("Tone set to BrainRot 💀", ephemeral=True)
-        self.stop()
+    # Callback Function for tones
+    def _make_callback(self, label, val):
+        async def callback(interaction: discord.Interaction):
+            self.value = val
+            await interaction.response.send_message(f"Tone set to {label}", ephemeral=True)
+            self.stop()
+        return callback
 
 # News Article Selection View
 class News_View(discord.ui.View):
     def __init__(self, articles, num):
-        super().__init__(timeout=60)
+        super().__init__(timeout=60) # 60 second timeout
         self.articles = articles
-        self.num = min(num, len(articles['articles']))
+        self.num = min(num, len(articles['articles'])) # For Safety
         self.create_buttons()
 
     def create_buttons(self):
+        # Button Styles
         styles = [
             discord.ButtonStyle.primary,
             discord.ButtonStyle.secondary,
@@ -134,43 +133,45 @@ class News_View(discord.ui.View):
             discord.ButtonStyle.primary,
         ]
         for i in range(self.num):
-            self.add_item(self.ArticleButton(i, self.articles, styles[i % len(styles)]))
-
+            self.add_item(self.ArticleButton(i, self.articles, styles[i]))
+    # Class for Buttons
     class ArticleButton(discord.ui.Button):
         def __init__(self, index, articles, style):
-            super().__init__(label=str(index + 1), style=style)
+            super().__init__(label=str(index+1), style=style) # Label = {1,2,3,4,5}, style= styles[i]
             self.index = index
             self.articles = articles
 
         async def callback(self, interaction: discord.Interaction):
-            await interaction.response.defer()
+            await interaction.response.defer() # Notifying Discord to avoid 3 second interaction timeout
 
             try:
                 article = self.articles['articles'][self.index]
-                headline = article.get('title', 'No Title')
+                headline = article.get('title')
                 link = article.get('url', '')
                 photo = article.get('urlToImage')
 
-                page = requests.get(link, timeout=10)
+                page = requests.get(link)
                 soup = BeautifulSoup(page.content, 'html.parser')
                 paragraphs = soup.find_all('p')
                 full_text = ' '.join([p.get_text() for p in paragraphs if p.get_text()])
-                truncated_text = full_text[:3000]
+                shorter_text = full_text[:3000] # Not to exceed gemma context window
 
-                if not truncated_text.strip():
+                if not shorter_text.strip():
                     await interaction.followup.send("❌ Sorry, couldn't extract meaningful content.", ephemeral=True)
                     self.view.stop()
                     return
 
+                # Gemma 3 response
                 summary_response = gemini_client.models.generate_content(
                     model="gemma-3-1b-it",
                     contents=[
-                        f"Please summarize the following news article in around 3-5 concise sentences while also being informative. Don't add your comment, response or anything. Just summarized news article:\n\n{truncated_text}"
+                        f"Please summarize the following news article in around 3-5 concise sentences while also being informative. Don't add your comment, response or anything. Just summarized news article:\n\n{shorter_text}"
                     ]
                 )
 
                 summary = summary_response.text.strip()
 
+                # Using Embeds for better UI
                 embed = discord.Embed(
                     title=f"🗞️ {headline}",
                     description=f"📝 **Summary:**\n{summary}\n\n🔗 [Read Full Article]({link})",
@@ -190,16 +191,18 @@ class News_View(discord.ui.View):
 # Stock Analysis Button View
 class Stock_View(discord.ui.View):
     def __init__(self, symbol, name):
-        super().__init__(timeout=60)
+        super().__init__(timeout=60) # 60 second timeout
         self.symbol = symbol
         self.name = name
 
+    # Stock Analysis Button
     @discord.ui.button(label="Stock Analysis", style=discord.ButtonStyle.danger)
     async def report(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.defer(thinking=True)
+        await interaction.response.defer(thinking=True) # Notifying Discord to avoid 3 second interaction timeout
 
         content_prompt = f"Analyze {self.name} ({self.symbol})."
 
+        # Gemini 2.0 flash with google search
         result = gemini_client.models.generate_content(
             model="gemini-2.0-flash",
             config=types.GenerateContentConfig(
@@ -219,6 +222,8 @@ class Stock_View(discord.ui.View):
             ),
             contents=content_prompt
         )
+
+        # Splitting the Text into Chunks to avoid 2000 character limit of Discord
         chunks = []
         full_text = result.text
         while len(full_text) > 0:
@@ -245,18 +250,18 @@ class PollDropdown(Select):
     def __init__(self, options, question):
         self.votes = {}
         self.question = question
-        select_options = [discord.SelectOption(label=opt, value=opt) for opt in options]
+        select_options = [discord.SelectOption(label=opt, value=opt) for opt in options] # DropDown Selection for each option
         super().__init__(placeholder="Choose your vote...", min_values=1, max_values=1, options=select_options)
 
     async def callback(self, interaction: discord.Interaction):
         user = interaction.user
         self.votes[user.id] = self.values[0]
 
-        results = {}
+        results = {} # To Store Voters and Votes
         for vote in self.votes.values():
             results[vote] = results.get(vote, 0) + 1
 
-        result_str = "\n".join(f"**{k}**: {v} vote(s)" for k, v in results.items())
+        result_str = "\n".join(f"**{k}**: {v} vote(s)" for k, v in results.items()) # k- voter, v- votes
         await interaction.response.send_message(
             f"🗳️ You voted for **{self.values[0]}**.\n\n**Live Results:**\n{result_str}",
             ephemeral=True
@@ -274,14 +279,18 @@ chat_session = None
 current_tone = "user_friendly"
 
 # --- Bot Events ---
+
+# On_Ready - Logged in as ADABot (ID: ADABot ID)
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user.name} (ID: {bot.user.id})")
 
+# On_Member_Join - Adds the user info to the "Users" Table in Database
 @bot.event
 async def on_member_join(member):
     add_user(member.id, str(member), member.joined_at.strftime("%Y-%m-%d %H:%M:%S"))
 
+# On_Message - 1) Adds the message info to the "Messages" Tabel in Database; 2) Sets up !translate command
 @bot.event
 async def on_message(message):
     global translation_active
@@ -304,6 +313,8 @@ async def on_message(message):
           await message.reply(f"🔄 {message.author.mention} {translated}")
 
 # --- Bot Commands ---
+
+# | !tone | command for Custom Tone Selection
 @bot.command()
 async def tone(ctx):
     global current_tone, chat_session
@@ -314,6 +325,7 @@ async def tone(ctx):
         current_tone = view.value
         chat_session = None
 
+# | !chat <prompt> | command for AI-driven Chat
 @bot.command()
 async def chat(ctx, *, prompt):
     global chat_session, current_tone
@@ -338,6 +350,7 @@ async def chat(ctx, *, prompt):
         await ctx.send(f"Error: {str(e)[:100]}...")
         print("Error:", e)
 
+# | !summarize + attached file/url | command for File or Article Summarization
 @bot.command()
 async def summarize(ctx, url: str = None):
     if ctx.message.attachments:
@@ -416,6 +429,7 @@ async def summarize(ctx, url: str = None):
     else:
         await ctx.send("❗ Please attach a file or provide a URL with the command.")
 
+# | !generate <prompt> | command for AI Image Generation
 @bot.command()
 async def generate(ctx, *, gen_prompt):
     response = gemini_client.models.generate_content(
@@ -435,6 +449,7 @@ async def generate(ctx, *, gen_prompt):
                 image_binary.seek(0)
                 await ctx.send(file=discord.File(fp=image_binary, filename='generated_image.png'))
 
+# | !zodiac <sign> | command for Daily Horoscopes
 @bot.command()
 async def zodiac(ctx, *, sign):
     full_url = zodiac_url + f"sign={sign}&day=TODAY"
@@ -454,6 +469,7 @@ async def zodiac(ctx, *, sign):
     else:
         await ctx.send(f"❌ Couldn't fetch horoscope for **{sign}**. Please check the sign name.")
 
+# | !news <topic> | command for Recent News Headlines and Summaries
 @bot.command()
 async def news(ctx, *, topic):
     articles = newsapi.get_everything(
@@ -474,6 +490,7 @@ async def news(ctx, *, topic):
     view = News_View(articles, len(titles))
     await ctx.send(f"📰 **Here are the top headlines for _{topic}_:**\n\n{msg}\n\n👇 Pick one to see a summary:", view=view)
 
+# | !roast @user | command for Specific User Roasting(Humiliating)
 @bot.command()
 async def roast(ctx, * ,roast_id):
     roast_id = int(((roast_id.replace('<', '')).replace('>', '')).replace('@', ''))
@@ -487,6 +504,7 @@ async def roast(ctx, * ,roast_id):
         )
     await ctx.send(roast_text.text)
 
+# | !compliment @user | command for Specific User Complimenting
 @bot.command()
 async def compliment(ctx, * ,compliment_id):
     compliment_id = int(((compliment_id.replace('<', '')).replace('>', '')).replace('@', ''))
@@ -500,6 +518,7 @@ async def compliment(ctx, * ,compliment_id):
         )
     await ctx.send(compliment_text.text)
 
+# | !meme | command for AI-Driven Random Meme
 @bot.command()
 async def meme(ctx):
     try:
@@ -570,7 +589,7 @@ async def meme(ctx):
     except Exception as e:
         await ctx.send(f"Something went wrong: {e}")
     
-
+# | !remindme <time> <message> | command for Reminder
 @bot.command()
 async def remindme(ctx, time, *, reminder):
     total_seconds = 0
@@ -601,6 +620,7 @@ async def remindme(ctx, time, *, reminder):
     await asyncio.sleep(total_seconds)
     await ctx.send(f"{ctx.author.mention} Here's your reminder: {reminder}")
 
+# | !stock <symbol> | command for Stock Data & Analysis
 @bot.command()
 async def stock(ctx, symbol):
     ticker = yf.Ticker(symbol)
@@ -629,7 +649,7 @@ async def stock(ctx, symbol):
     stock_view = Stock_View(symbol.upper(), name)
     await ctx.send(response, view=stock_view)
 
-
+# | !weather <City> | command for Current Weather Data
 @bot.command()
 async def weather(ctx, *, city: str):
     await ctx.typing()
@@ -676,6 +696,7 @@ async def weather(ctx, *, city: str):
         print(f"Weather Error: {e}")
         await ctx.send("❌ Error getting weather.")
 
+# | !thisday | command for Historical Fact
 @bot.command()
 async def thisday(ctx):
     fact = gemini_client.models.generate_content(
@@ -706,6 +727,7 @@ async def translate(ctx, *, order):
     else:
         await ctx.send("Review your format: `!translate start` or `!translate stop`.")
 
+# | !poll "Question" "Option 1" "Option 2"... | command for Automatic Poll Creation
 @bot.command()
 async def poll(ctx, *, args):
     matches = re.findall(r'"(.*?)"', args)
@@ -725,6 +747,7 @@ async def poll(ctx, *, args):
     view = PollView(options, question)
     await ctx.send(embed=embed, view=view)
 
+# | !info | command for ADABot Manual
 @bot.command()
 async def info(ctx):
     """Show bot help information"""
