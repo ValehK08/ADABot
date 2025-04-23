@@ -1,7 +1,6 @@
 discord.py>=2.0.0
 python-dotenv
 google-genai
-google-genai[types]
 Pillow
 requests
 beautifulsoup4
