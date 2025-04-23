@@ -10,6 +10,7 @@ import config
 import traceback
 from google import genai
 from google.genai import types
+from google.genai.types import Tool, GenerateContentConfig, GoogleSearch
 
 # --- Utility Commands Cog ---
 class Utility(commands.Cog):
