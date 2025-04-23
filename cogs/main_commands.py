@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from google import genai
 from google.genai import types
+from google.genai.types import Tool, GenerateContentConfig, GoogleSearch
 from PIL import Image
 from io import BytesIO
 import config
