@@ -70,6 +70,7 @@ ADABot is an advanced Discord bot powered by Google's Gemini AI, offering a suit
     -   Replace the placeholder string with your actual token:
         ```python
         DISCORD_TOKEN = "YOUR_DISCORD_BOT_TOKEN"
+        OPENROUTER_API = "YOUR_OPENROUTER_API_KEY"
         ```
 4.  **⚠️ Warning: If you are running the bot in an environment...**:
     -   If you're running this project in an interactive environment such as **Jupyter Notebook** or **Spyder**, you may encounter issues with asynchronous functions (e.g., `... cannot be called from a running event loop`).
