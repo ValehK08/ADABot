@@ -66,15 +66,15 @@ ADABot is an advanced Discord bot powered by Google's Gemini AI, offering a suit
     ```
 
 3.  **Configure API Keys and Other Credentials**:
-    -   Open the Python script (`.py` file).
-    -   Locate the API key variables near the top and replace the placeholder strings with your actual keys:
+    -   Open the .env file.
+    -   Replace the placeholder strings with your actual keys:
         ```python
-        discord_token = "YOUR_DISCORD_BOT_TOKEN"
-        gemini = "YOUR_GEMINI_API_KEY"
-        news_api = "YOUR_NEWS_API_KEY"
-        openrouter = "YOUR_OPENROUTER_API_KEY"
-        IMGFlip_Username = "YOUR_IMGFLIP_USERNAME"
-        IMGFlip_Password = "YOUR_IMGFLIP_PASSWORD"
+        DISCORD_TOKEN = "YOUR_DISCORD_BOT_TOKEN"
+        GEMINI_API_KEY = "YOUR_GEMINI_API_KEY"
+        NEWS_API_KEY = "YOUR_NEWS_API_KEY"
+        OPENROUTER_API_KEY = "YOUR_OPENROUTER_API_KEY"
+        IMGFLIP_USERNAME = "YOUR_IMGFLIP_USERNAME"
+        IMGFLIP_PASSWORD = "YOUR_IMGFLIP_PASSWORD"
         ```
 
 ---
