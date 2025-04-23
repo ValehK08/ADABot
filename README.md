@@ -40,7 +40,7 @@ ADABot is an advanced Discord bot powered by Google's Gemini AI, offering a suit
 -   **Dependencies**: Install necessary libraries using pip.
 
     ```bash
-    pip install discord.py google-generativeai google-generativeai[types] Pillow requests beautifulsoup4 PyPDF2 python-docx nest_asyncio python-dateutil newsapi-python yfinance pycryptodome
+    pip install discord.py google-genai Pillow requests beautifulsoup4 PyPDF2 python-docx nest_asyncio python-dateutil newsapi-python yfinance pycryptodome
     ```
 
     Or use the `requirements.txt` file:
@@ -75,6 +75,14 @@ ADABot is an advanced Discord bot powered by Google's Gemini AI, offering a suit
         OPENROUTER_API_KEY = "YOUR_OPENROUTER_API_KEY"
         IMGFLIP_USERNAME = "YOUR_IMGFLIP_USERNAME"
         IMGFLIP_PASSWORD = "YOUR_IMGFLIP_PASSWORD"
+        ```
+4.  **⚠️ Warning: If you are running the bot in an environment...**:
+    -   If you're running this project in an interactive environment such as **Jupyter Notebook** or **Spyder**, you may encounter issues with asynchronous functions (e.g., `... cannot be called from a running event loop`).
+    -   To resolve this, you can apply a fix using the `nest_asyncio` library.
+    -   Uncomment the lines below from the bottom lines of bot.py to fix that issue:
+        ```
+        # import nest_asyncio
+        # nest_asyncio.apply()
         ```
 
 ---
