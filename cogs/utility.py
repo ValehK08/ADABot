@@ -231,7 +231,7 @@ class Utility(commands.Cog):
             # 2. Get weather data using coordinates
             weather_url = (
                 f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}"
-                f"¤t=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m"
+                f"&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m"
                 f"&temperature_unit=celsius&wind_speed_unit=kmh&precipitation_unit=mm"
                 f"&timezone=auto"
             )
@@ -239,14 +239,17 @@ class Utility(commands.Cog):
             weather_resp.raise_for_status()
             weather_data = weather_resp.json()
 
-            current = weather_data.get("current")
-            if not current:
-                await ctx.send("⚠️ Could not parse current weather data from the API.")
-                return
+            current_hour = datetime.now().hour
+            temp = weather_data['hourly']['temperature_2m'][current_hour]
+            apparent_temp = weather_data['hourly']['apparent_temperature'][current_hour]
+            humidity = weather_data['hourly']['relative_humidity_2m'][current_hour]
+            precip = weather_data['hourly']['precipitation'][current_hour]
+            wind_speed = weather_data['hourly']['wind_speed_10m'][current_hour]
+            wind_dir = weather_data['hourly']['wind_direction_10m'][current_hour]
+            wmo_code = weather_data['hourly']['weather_code'][current_hour]
+            is_day = weather_data['hourly']['is_day'][current_hour]
 
             # --- Emojis based on Weather Code ---
-            wmo_code = current.get('weather_code', 0)
-            is_day = current.get('is_day', 1)
             weather_icon = "❓"
             if wmo_code == 0: weather_icon = "☀️" if is_day else "🌙" # Clear sky
             elif wmo_code == 1: weather_icon = "☀️" if is_day else "🌙" # Mainly clear
@@ -259,14 +262,6 @@ class Utility(commands.Cog):
             elif wmo_code in [80, 81, 82]: weather_icon = "🌧️" # Rain showers
             elif wmo_code in [95, 96, 99]: weather_icon = "⛈️" # Thunderstorm
 
-            temp = current.get('temperature_2m', 'N/A')
-            apparent_temp = current.get('apparent_temperature', 'N/A')
-            humidity = current.get('relative_humidity_2m', 'N/A')
-            precip = current.get('precipitation', 'N/A')
-            wind_speed = current.get('wind_speed_10m', 'N/A')
-            wind_dir = current.get('wind_direction_10m', 'N/A')
-
-            # Get wind direction arrow
             degrees = wind_dir
             if degrees is not None and degrees != 'N/A':
                 if 337.5 <= degrees or degrees < 22.5: direction_arrow = "⬆️ N"
@@ -279,8 +274,7 @@ class Utility(commands.Cog):
                 elif 292.5 <= degrees < 337.5: direction_arrow = "↖️ NW"
                 else: direction_arrow = f"{degrees}°"
             else: direction_arrow = "N/A"
-
-
+        
             embed = discord.Embed(
                 title=f"{weather_icon} Weather in {display_name}",
                 color=discord.Color.og_blurple()
@@ -290,10 +284,10 @@ class Utility(commands.Cog):
             embed.add_field(name="Humidity", value=f"{humidity}%", inline=True)
             embed.add_field(name="Wind", value=f"{wind_speed} km/h ({direction_arrow})", inline=True)
             embed.add_field(name="Precipitation", value=f"{precip} mm", inline=True)
-
+        
             # Add timestamp
             embed.timestamp = datetime.now()
-
+        
             await ctx.send(embed=embed)
 
         except requests.exceptions.Timeout:
