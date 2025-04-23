@@ -1,13 +1,14 @@
-discord.py
+discord.py>=2.0.0
+python-dotenv
 google-generativeai
 google-generativeai[types]
 Pillow
 requests
 beautifulsoup4
 PyPDF2
+pycryptodome
 python-docx
-nest_asyncio
 python-dateutil
 newsapi-python
 yfinance
-Pycryptodome
+nest_asyncio
