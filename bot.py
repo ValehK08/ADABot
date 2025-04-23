@@ -50,15 +50,14 @@ async def load_extensions():
 
 # --- Main Execution ---
 async def main():
-    # Apply nest_asyncio if running in an environment like Jupyter/Spyder that needs it
-    # import nest_asyncio
-    # nest_asyncio.apply()
-
     async with bot:
         await load_extensions()
         await bot.start(config.DISCORD_TOKEN)
 
 if __name__ == "__main__":
+    # Apply nest_asyncio if running in an environment like Jupyter/Spyder that needs it
+    # import nest_asyncio
+    # nest_asyncio.apply()
     if not config.DISCORD_TOKEN or config.DISCORD_TOKEN == "YOUR_DISCORD_TOKEN":
         print("ERROR: Discord token is missing or placeholder in config.py / .env")
     else:
