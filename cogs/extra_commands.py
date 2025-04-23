@@ -14,6 +14,7 @@ import config
 import traceback
 from google import genai
 from google.genai import types
+from google.genai.types import Tool, GenerateContentConfig, GoogleSearch
 
 class ExtraCommands(commands.Cog):
     def __init__(self, bot):
@@ -62,8 +63,6 @@ class ExtraCommands(commands.Cog):
                 translated = translate_resp.text.strip()
                 if translated.lower() != 'none':
                     await message.reply(f"🔄 {message.author.mention} {translated}", allowed_mentions=discord.AllowedMentions(users=True))
-            except genai.types.generation_types.StopCandidateException:
-                 await message.reply("⚠️ Translation stopped due to content policy.", allowed_mentions=discord.AllowedMentions.none())
             except Exception as e:
                 print(f"Translation error: {e}")
 
@@ -285,8 +284,6 @@ class ExtraCommands(commands.Cog):
                 )
             )
             await ctx.send(fact.text)
-        except genai.types.generation_types.StopCandidateException:
-             await ctx.send("⚠️ Fact generation stopped due to content policy.")
         except Exception as e:
             await ctx.send(f"⚠️ Could not fetch historical fact: {str(e)[:150]}")
             traceback.print_exc()
@@ -454,8 +451,6 @@ class ExtraCommands(commands.Cog):
             )
             # Send roast for the target user
             await ctx.send(f"{target_user.mention}, {roast_text.text}", allowed_mentions=discord.AllowedMentions(users=True))
-        except genai.types.generation_types.StopCandidateException:
-             await ctx.send(f"⚠️ Roast generation stopped for {target_user.mention} due to content policy.", allowed_mentions=discord.AllowedMentions.none())
         except Exception as e:
             await ctx.send(f"⚠️ Error generating roast for {target_user.mention}: {str(e)[:150]}", allowed_mentions=discord.AllowedMentions.none())
             traceback.print_exc()
@@ -508,8 +503,6 @@ class ExtraCommands(commands.Cog):
             # Send compliment for the target user
             await ctx.send(f"{target_user.mention}, {compliment_text.text}", allowed_mentions=discord.AllowedMentions(users=True))
 
-        except genai.types.generation_types.StopCandidateException:
-             await ctx.send(f"⚠️ Compliment generation stopped for {target_user.mention} due to content policy.", allowed_mentions=discord.AllowedMentions.none())
         except Exception as e:
             await ctx.send(f"⚠️ Error generating compliment for {target_user.mention}: {str(e)[:150]}", allowed_mentions=discord.AllowedMentions.none())
             traceback.print_exc()
