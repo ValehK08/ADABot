@@ -10,3 +10,4 @@ nest_asyncio
 python-dateutil
 newsapi-python
 yfinance
+Pycryptodome
