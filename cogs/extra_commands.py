@@ -57,7 +57,7 @@ class ExtraCommands(commands.Cog):
             try:
                 translate_prompt = f"Translate the following text to English if it is not in english. If it is not in english, Your reponse must only consist of the translation(no extra comments). If it is in english, Your response must only consist of 'None':\n\n{message.content}"
                 translate_resp = self.gemini_client.models.generate_content(
-                    model="gemini-2.0-flash",
+                    model="gemini-2.0-flash-lite",
                     contents=translate_prompt
                 )
                 translated = translate_resp.text.strip()
@@ -276,7 +276,7 @@ class ExtraCommands(commands.Cog):
             google_search_tool = Tool(google_search=GoogleSearch())
 
             fact = self.gemini_client.models.generate_content(
-                model="gemini-2.0-flash",
+                model="gemini-2.0-flash-lite",
                 contents="Give me one interesting historical fact about today's date (no year needed unless crucial). Start the response *directly* with 'On this day in history...' and keep it concise (1-2 sentences).",
                 config=types.GenerateContentConfig(
                     tools=[google_search_tool],
@@ -442,7 +442,7 @@ class ExtraCommands(commands.Cog):
             context = "\n".join(history)
 
             roast_text = self.gemini_client.models.generate_content(
-                model="gemini-2.0-flash",
+                model="gemini-2.0-flash-lite",
                 config=types.GenerateContentConfig(
                     temperature=0.8,
                     system_instruction="You are a witty but harmless roast bot. Generate a short (2-3 sentences), creative, and funny roast based *only* on the provided chat history context or the username. Avoid actual insults, harassment, or sensitive topics. Keep it lighthearted and clever."
@@ -493,7 +493,7 @@ class ExtraCommands(commands.Cog):
             context = "\n".join(history)
 
             compliment_text = self.gemini_client.models.generate_content(
-                model="gemini-2.0-flash",
+                model="gemini-2.0-flash-lite",
                 config=types.GenerateContentConfig(
                     temperature=0.6,
                     system_instruction="You are a kind and thoughtful bot. Generate a short (1-2 sentences), genuine, and specific compliment for the user based *only* on the provided chat history context or their username. Focus on positive aspects observed. If no context is useful, provide a general nice compliment."
