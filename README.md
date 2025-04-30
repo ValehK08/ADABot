@@ -1,4 +1,6 @@
 # ADABot - Gemini & Multi-API Powered Discord Bot
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)
+![Discord](https://img.shields.io/badge/Discord-Bot-lightgrey?logo=discord)
 
 ADABot is an advanced Discord bot powered by Google's Gemini AI, offering a suite of features from conversational AI with selectable personalities to file/URL summarization, AI image generation, news updates, stock analysis, weather forecasts, translation, polls, and fun social interactions like reminders, roasts, compliments, and memes. Built with Python, discord.py, and SQLite for context-aware responses, ADABot brings powerful AI and utility capabilities directly into your Discord server.
 
